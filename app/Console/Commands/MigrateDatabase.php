@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use DB;
 use Schema;
 
+
 class MigrateDatabase extends Command
 {
     /**
@@ -36,8 +37,8 @@ class MigrateDatabase extends Command
      public function handle()
     {
         $this->migrateTables();
-        //$this->migrateViews();
-        //$this->migrateStoredProcedures();
+        $this->migrateViews();
+        $this->migrateStoredProcedures();
 
         $this->info('Database migration completed successfully.');
     }
@@ -49,57 +50,69 @@ class MigrateDatabase extends Command
 
         foreach ($tables as $table) {
             $tableName = $table->TABLE_NAME;
-            // Lấy cấu trúc bảng từ MSSQL Server
-            $columns = DB::connection('sqlsrv')->select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$tableName]);
 
-            // Kiểm tra xem bảng có tồn tại trong MySQL hay không
-            if (!Schema::connection('mysql')->hasTable($tableName)) {
-                // Tạo bảng tương ứng trong MySQL
-                Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
-                    foreach ($columns as $column) {
-                        $columnName = $column->COLUMN_NAME;
-                        $dataType = $column->DATA_TYPE;
-                        $isNullable = $column->IS_NULLABLE === 'YES';
-                        $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
+            try {
+                // Lấy cấu trúc bảng từ MSSQL Server
+                $columns = DB::connection('sqlsrv')->select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$tableName]);
 
-                        // Chuyển đổi kiểu dữ liệu từ MSSQL sang MySQL
-                        switch ($dataType) {
-                            case 'int':
-                                $table->integer($columnName)->nullable($isNullable);
-                                break;
-                            case 'varchar':
-                                $table->string($columnName, $maxLength)->nullable($isNullable);
-                                break;
-                            case 'text':
-                                $table->text($columnName)->nullable($isNullable);
-                                break;
-                            case 'datetime':
-                                $table->dateTime($columnName)->nullable($isNullable);
-                                break;
-                            case 'bit':
-                                $table->boolean($columnName)->nullable($isNullable);
-                                break;
-                            // Thêm các kiểu dữ liệu khác nếu cần
-                            default:
-                                $table->string($columnName)->nullable($isNullable);
-                                break;
+                // Kiểm tra xem bảng có tồn tại trong MySQL hay không
+                if (!Schema::connection('mysql')->hasTable($tableName)) {
+                    // Tạo bảng tương ứng trong MySQL
+                    Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
+                        foreach ($columns as $column) {
+                            $columnName = $column->COLUMN_NAME;
+                            $dataType = $column->DATA_TYPE;
+                            $isNullable = $column->IS_NULLABLE === 'YES';
+                            $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
+
+                            // Chuyển đổi kiểu dữ liệu từ MSSQL sang MySQL
+                            switch ($dataType) {
+                                case 'int':
+                                    $table->integer($columnName)->nullable($isNullable);
+                                    break;
+                                case 'varchar':
+                                    $table->string($columnName, $maxLength)->nullable($isNullable);
+                                    break;
+                                case 'text':
+                                    $table->text($columnName)->nullable($isNullable);
+                                    break;
+                                case 'datetime':
+                                    $table->dateTime($columnName)->nullable($isNullable);
+                                    break;
+                                case 'bit':
+                                    $table->boolean($columnName)->nullable($isNullable);
+                                    break;
+                                // Thêm các kiểu dữ liệu khác nếu cần
+                                default:
+                                    $table->string($columnName)->nullable($isNullable);
+                                    break;
+                            }
                         }
-                    }
-                });
+                    });
 
-                $this->info("Table {$tableName} created successfully in MySQL.");
-            } else {
-                $this->info("Table {$tableName} already exists in MySQL.");
-            }
+                    $this->info("Table {$tableName} created successfully in MySQL.");
+                } else {
+                    $this->info("Table {$tableName} already exists in MySQL.");
+                }
 
-            // Di chuyển dữ liệu từ MSSQL Server sang MySQL
-            $data = DB::connection('sqlsrv')->table($tableName)->get();
-            foreach ($data as $row) {
-                DB::connection('mysql')->table($tableName)->insert((array) $row);
+                // Truncate bảng trước khi di chuyển dữ liệu
+                DB::connection('mysql')->table($tableName)->truncate();
+
+                // Di chuyển dữ liệu từ MSSQL Server sang MySQL
+                $data = DB::connection('sqlsrv')->table($tableName)->get();
+                foreach ($data as $row) {
+                    DB::connection('mysql')->table($tableName)->insert((array) $row);
+                }
                 $this->info("Data of table {$tableName} migrated successfully.");
+            } catch (\Exception $e) {
+                // Ghi log lỗi và tiếp tục với bảng tiếp theo
+                \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
+                $this->error("Error migrating table {$tableName}. Check log for details.");
+                continue;
             }
         }
     }
+
 
     private function migrateViews()
     {
