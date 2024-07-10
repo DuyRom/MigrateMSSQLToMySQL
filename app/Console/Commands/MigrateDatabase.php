@@ -80,9 +80,6 @@ class MigrateDatabase extends Command
                                 case 'bit':
                                     $table->boolean($columnName)->nullable($isNullable);
                                     break;
-                                case 'binary':
-                                    $table->binary($columnName)->nullable($isNullable);
-                                    break;
                                 case 'image':
                                     $table->binary($columnName)->nullable($isNullable);
                                     break;
