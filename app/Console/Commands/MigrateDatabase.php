@@ -123,13 +123,29 @@ class MigrateDatabase extends Command
                 } else {
                     $firstColumn = Schema::connection('sqlsrv')->getColumnListing($tableName)[0];
     
+                    // DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
+                    //     foreach ($rows as $row) {
+                    //         DB::connection('mysql')->table($tableName)->insert((array) $row);
+                    //         $totalMigrated++;
+                    //     }
+                    //     $this->info("Chunk of data for table {$tableName} migrated successfully.");
+                    // });
+
                     DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
                         foreach ($rows as $row) {
-                            DB::connection('mysql')->table($tableName)->insert((array) $row);
+                            $rowArray = (array) $row;
+                            foreach ($rowArray as $column => $value) {
+                                if ($value === '') {
+                                    $rowArray[$column] = null;
+                                }
+                            }
+                    
+                            DB::connection('mysql')->table($tableName)->insert($rowArray);
                             $totalMigrated++;
                         }
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
+                    
                 }
 
                 if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
