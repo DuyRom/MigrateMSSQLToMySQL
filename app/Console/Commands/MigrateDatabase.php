@@ -77,7 +77,7 @@ class MigrateDatabase extends Command
                                     break;                                
                                 case 'varchar':
                                 case 'nvarchar':
-                                    if ($maxLength > 255) {
+                                    if ($maxLength > 299) {
                                         $table->text($columnName)->nullable($isNullable);
                                     } else {
                                         $table->string($columnName, $maxLength)->nullable($isNullable);
