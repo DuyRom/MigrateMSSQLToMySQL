@@ -76,12 +76,7 @@ class MigrateDatabase extends Command
                                     }
                                     break;                                
                                 case 'varchar':
-                                case 'nvarchar':
-                                    if ($maxLength > 299) {
-                                        $table->text($columnName)->nullable($isNullable);
-                                    } else {
-                                        $table->string($columnName, $maxLength)->nullable($isNullable);
-                                    }
+                                    $table->string($columnName, $maxLength)->nullable($isNullable);
                                     break;
                                 case 'text':
                                     $table->text($columnName)->nullable($isNullable);
@@ -135,6 +130,22 @@ class MigrateDatabase extends Command
                         }
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
+
+                    // DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
+                    //     foreach ($rows as $row) {
+                    //         $rowArray = (array) $row;
+                    //         foreach ($rowArray as $column => $value) {
+                    //             if ($value === '') {
+                    //                 $rowArray[$column] = null;
+                    //             }
+                    //         }
+                    
+                    //         DB::connection('mysql')->table($tableName)->insert($rowArray);
+                    //         $totalMigrated++;
+                    //     }
+                    //     $this->info("Chunk of data for table {$tableName} migrated successfully.");
+                    // });
+                    
                 }
 
                 if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
@@ -183,12 +194,14 @@ class MigrateDatabase extends Command
                 Notification::route('mail', config('mail.to.address'))
                             ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
 
+                \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
+                
                 continue;
+               
             }
         }
 
         Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
-        \Log::info('Database migration completed successfully.', ['successful' => $successfulMigrations, 'failed' => $failedMigrations]);
     }
 
     private function migrateViews()
