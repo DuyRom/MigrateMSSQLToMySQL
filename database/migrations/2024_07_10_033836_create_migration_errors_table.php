@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('migration_errors', function (Blueprint $table) {
             $table->id();
             $table->string('table_name');
-            $table->text('error_message');
+            $table->longText('error_message');
             $table->timestamps();
         });
     }

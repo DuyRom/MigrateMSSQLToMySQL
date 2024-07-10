@@ -66,7 +66,6 @@ class MigrateDatabase extends Command
                             $dataType = $column->DATA_TYPE;
                             $isNullable = $column->IS_NULLABLE === 'YES';
                             $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
-                            $this->info($maxLength);
                             
                             switch ($dataType) {
                                 case 'int':
@@ -75,20 +74,30 @@ class MigrateDatabase extends Command
                                     } else {
                                         $table->integer($columnName)->nullable($isNullable);
                                     }
-                                    break;                                
+                                    break;
                                 case 'varchar':
-                                    if($maxLength > 299){
+                                case 'nvarchar':
+                                    if ($maxLength > 255) {
+                                        $this->info($columnName . ' ' . $maxLength);
                                         $table->text($columnName)->nullable($isNullable);
-                                    }else{
+                                    } else {
                                         $table->string($columnName, $maxLength)->nullable($isNullable);
                                     }
-                                    $table->string($columnName, $maxLength)->nullable($isNullable);
                                     break;
                                 case 'text':
                                     $table->text($columnName)->nullable($isNullable);
                                     break;
                                 case 'ntext':
                                     $table->longText($columnName)->nullable($isNullable);
+                                    break;
+                                case 'float':
+                                    $table->decimal($columnName, 18, 4)->nullable($isNullable);
+                                    break;
+                                case 'decimal':
+                                    $table->decimal($columnName, 18, 4)->nullable($isNullable);
+                                    break;
+                                case 'date':
+                                    $table->date($columnName)->nullable($isNullable);
                                     break;
                                 case 'datetime':
                                     $table->dateTime($columnName)->nullable($isNullable);
@@ -102,7 +111,7 @@ class MigrateDatabase extends Command
                                 default:
                                     $table->string($columnName)->nullable($isNullable);
                                     break;
-                            }
+                            }  
                         }
                     });
 
@@ -136,22 +145,6 @@ class MigrateDatabase extends Command
                         }
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
-
-                    // DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
-                    //     foreach ($rows as $row) {
-                    //         $rowArray = (array) $row;
-                    //         foreach ($rowArray as $column => $value) {
-                    //             if ($value === '') {
-                    //                 $rowArray[$column] = null;
-                    //             }
-                    //         }
-                    
-                    //         DB::connection('mysql')->table($tableName)->insert($rowArray);
-                    //         $totalMigrated++;
-                    //     }
-                    //     $this->info("Chunk of data for table {$tableName} migrated successfully.");
-                    // });
-                    
                 }
 
                 if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {

@@ -16,13 +16,9 @@
 
     <h2>Failed Migrations</h2>
     <ul>
-        @if ($failedMigrations->isEmpty())
-            <li>No migrations failed</li>
-        @else
-            @foreach ($failedMigrations as $migration)
-                <li>{{ $migration }}</li>
-            @endforeach
-        @endif
+        @foreach ($failedMigrations as $migration)
+            <li>{{ $migration }}</li>
+        @endforeach
     </ul>
 </body>
 </html>
