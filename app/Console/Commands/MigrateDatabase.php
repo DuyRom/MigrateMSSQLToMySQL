@@ -66,7 +66,7 @@ class MigrateDatabase extends Command
                             $dataType = $column->DATA_TYPE;
                             $isNullable = $column->IS_NULLABLE === 'YES';
                             $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
-                            
+
                             switch ($dataType) {
                                 case 'int':
                                     if (strtolower($columnName) === 'id' && config('database.id_auto_increment')) {
@@ -80,6 +80,8 @@ class MigrateDatabase extends Command
                                     if ($maxLength > 255) {
                                         $this->info($columnName . ' ' . $maxLength);
                                         $table->text($columnName)->nullable($isNullable);
+                                    } elseif (strtolower($maxLength) === 'max') { 
+                                        $table->longText($columnName)->nullable($isNullable);
                                     } else {
                                         $table->string($columnName, $maxLength)->nullable($isNullable);
                                     }
@@ -111,7 +113,8 @@ class MigrateDatabase extends Command
                                 default:
                                     $table->string($columnName)->nullable($isNullable);
                                     break;
-                            }  
+                            }
+                            
                         }
                     });
 
