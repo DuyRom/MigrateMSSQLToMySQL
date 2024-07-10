@@ -71,6 +71,9 @@ class MigrateDatabase extends Command
                                 case 'text':
                                     $table->text($columnName)->nullable($isNullable);
                                     break;
+                                case 'ntext':
+                                    $table->longText($columnName)->nullable($isNullable);
+                                    break;
                                 case 'datetime':
                                     $table->dateTime($columnName)->nullable($isNullable);
                                     break;
@@ -102,13 +105,23 @@ class MigrateDatabase extends Command
                 }
 
                 $totalMigrated = 0;
-                DB::connection('sqlsrv')->table($tableName)->orderBy('id')->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
-                    foreach ($rows as $row) {
-                        DB::connection('mysql')->table($tableName)->insert((array) $row);
-                        $totalMigrated++;
-                    }
-                    $this->info("Chunk of data for table {$tableName} migrated successfully.");
-                });
+                if (Schema::connection('sqlsrv')->hasColumn($tableName, 'id')) {
+                    DB::connection('sqlsrv')->table($tableName)->orderBy('id')->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
+                        foreach ($rows as $row) {
+                            DB::connection('mysql')->table($tableName)->insert((array) $row);
+                            $totalMigrated++;
+                        }
+                        $this->info("Chunk of data for table {$tableName} migrated successfully.");
+                    });
+                } else {
+                    DB::connection('sqlsrv')->table($tableName)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
+                        foreach ($rows as $row) {
+                            DB::connection('mysql')->table($tableName)->insert((array) $row);
+                            $totalMigrated++;
+                        }
+                        $this->info("Chunk of data for table {$tableName} migrated successfully.");
+                    });
+                }
 
                 DB::connection('mysql')->table('migration_status')->updateOrInsert(
                     ['table_name' => $tableName],
@@ -144,6 +157,7 @@ class MigrateDatabase extends Command
             }
         }
     }
+
 
     private function migrateViews()
     {
