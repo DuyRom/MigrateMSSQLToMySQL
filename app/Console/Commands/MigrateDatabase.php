@@ -7,6 +7,8 @@ use DB;
 use Schema;
 use App\Mail\MigrationCompleted;
 use Illuminate\Support\Facades\Mail;
+use App\Notifications\MigrationErrorNotification;
+use Illuminate\Support\Facades\Notification;
 
 class MigrateDatabase extends Command
 {
@@ -153,7 +155,6 @@ class MigrateDatabase extends Command
                 $this->info("Data of table {$tableName} migrated successfully.");
                 $successfulMigrations[] = $tableName;
             } catch (\Exception $e) {
-                \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
                 $this->error("Error migrating table {$tableName}. ");
 
                 DB::connection('mysql')->table('migration_errors')->insert([
@@ -173,6 +174,10 @@ class MigrateDatabase extends Command
                 );
 
                 $failedMigrations[] = $tableName;
+
+                Notification::route('mail', config('mail.to.address'))
+                            ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
+
                 continue;
             }
         }
