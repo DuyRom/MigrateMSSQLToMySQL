@@ -5,7 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use DB;
 use Schema;
-
+use App\Mail\MigrationCompleted;
+use Illuminate\Support\Facades\Mail;
 
 class MigrateDatabase extends Command
 {
@@ -46,6 +47,9 @@ class MigrateDatabase extends Command
     private function migrateTables()
     {
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+
+        $successfulMigrations = [];
+        $failedMigrations = [];
 
         foreach ($tables as $table) {
             $tableName = $table->TABLE_NAME;
@@ -130,6 +134,7 @@ class MigrateDatabase extends Command
                 );
 
                 $this->info("Data of table {$tableName} migrated successfully.");
+                $successfulMigrations[] = $tableName;
             } catch (\Exception $e) {
                 \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
                 $this->error("Error migrating table {$tableName}. ");
@@ -150,9 +155,12 @@ class MigrateDatabase extends Command
                     ]
                 );
 
+                $failedMigrations[] = $tableName;
                 continue;
             }
         }
+
+        Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
     }
 
 
