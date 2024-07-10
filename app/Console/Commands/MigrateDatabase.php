@@ -9,6 +9,7 @@ use App\Mail\MigrationCompleted;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\MigrationErrorNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Database\Schema\Blueprint;
 
 class MigrateDatabase extends Command
 {
@@ -74,7 +75,7 @@ class MigrateDatabase extends Command
                                     } else {
                                         $table->integer($columnName)->nullable($isNullable);
                                     }
-                                    break;                                
+                                    break;
                                 case 'varchar':
                                     $table->string($columnName, $maxLength)->nullable($isNullable);
                                     break;
@@ -115,8 +116,25 @@ class MigrateDatabase extends Command
                 if (Schema::connection('sqlsrv')->hasColumn($tableName, 'id')) {
                     DB::connection('sqlsrv')->table($tableName)->orderBy('id')->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
                         foreach ($rows as $row) {
-                            DB::connection('mysql')->table($tableName)->insert((array) $row);
-                            $totalMigrated++;
+                            try {
+                                DB::connection('mysql')->table($tableName)->insert((array) $row);
+                                $totalMigrated++;
+                            } catch (\Exception $e) {
+                                if ($e->getCode() == 1406) {
+                                    preg_match("/for column '(\w+)'/", $e->getMessage(), $matches);
+                                    $columnName = $matches[1] ?? null;
+                                    if ($columnName) {
+                                        $this->error("Data too long for column {$columnName} in table {$tableName}. Changing column type to TEXT and retrying.");
+                                        $this->changeColumnTypeToText($tableName, $columnName);
+                                        DB::connection('mysql')->table($tableName)->insert((array) $row);
+                                        $totalMigrated++;
+                                    } else {
+                                        throw $e;
+                                    }
+                                } else {
+                                    throw $e;
+                                }
+                            }
                         }
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
@@ -125,27 +143,28 @@ class MigrateDatabase extends Command
     
                     DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
                         foreach ($rows as $row) {
-                            DB::connection('mysql')->table($tableName)->insert((array) $row);
-                            $totalMigrated++;
+                            try {
+                                DB::connection('mysql')->table($tableName)->insert((array) $row);
+                                $totalMigrated++;
+                            } catch (\Exception $e) {
+                                if ($e->getCode() == 1406) {
+                                    preg_match("/for column '(\w+)'/", $e->getMessage(), $matches);
+                                    $columnName = $matches[1] ?? null;
+                                    if ($columnName) {
+                                        $this->error("Data too long for column {$columnName} in table {$tableName}. Changing column type to TEXT and retrying.");
+                                        $this->changeColumnTypeToText($tableName, $columnName);
+                                        DB::connection('mysql')->table($tableName)->insert((array) $row);
+                                        $totalMigrated++;
+                                    } else {
+                                        throw $e;
+                                    }
+                                } else {
+                                    throw $e;
+                                }
+                            }
                         }
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
-
-                    // DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
-                    //     foreach ($rows as $row) {
-                    //         $rowArray = (array) $row;
-                    //         foreach ($rowArray as $column => $value) {
-                    //             if ($value === '') {
-                    //                 $rowArray[$column] = null;
-                    //             }
-                    //         }
-                    
-                    //         DB::connection('mysql')->table($tableName)->insert($rowArray);
-                    //         $totalMigrated++;
-                    //     }
-                    //     $this->info("Chunk of data for table {$tableName} migrated successfully.");
-                    // });
-                    
                 }
 
                 if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
@@ -197,36 +216,26 @@ class MigrateDatabase extends Command
                 \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
                 
                 continue;
-               
             }
         }
 
         Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
     }
 
-    private function migrateViews()
+    /**
+     * Change the column type to TEXT.
+     *
+     * @param string $tableName
+     * @param string $columnName
+     * @return void
+     */
+    private function changeColumnTypeToText($tableName, $columnName)
     {
-        $views = DB::connection('sqlsrv')->select('SELECT TABLE_NAME, VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS');
+        Schema::connection('mysql')->table($tableName, function (Blueprint $table) use ($columnName) {
+            $table->text($columnName)->change();
+        });
 
-        foreach ($views as $view) {
-            $viewName = $view->TABLE_NAME;
-            $viewDefinition = $view->VIEW_DEFINITION;
-
-            try {
-                DB::connection('mysql')->statement("CREATE VIEW {$viewName} AS {$viewDefinition}");
-                $this->info("View {$viewName} created successfully in MySQL.");
-            } catch (\Exception $e) {
-                \Log::error("Error creating view {$viewName}: " . $e->getMessage());
-                $this->error("Error creating view {$viewName}. Check log for details.");
-
-                DB::connection('mysql')->table('migration_errors')->insert([
-                    'table_name' => $viewName,
-                    'error_message' => $e->getMessage(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
+        $this->info("Column {$columnName} in table {$tableName} changed to TEXT.");
     }
 
     private function migrateStoredProcedures()
