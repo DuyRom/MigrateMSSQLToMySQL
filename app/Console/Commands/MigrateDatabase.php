@@ -45,19 +45,15 @@ class MigrateDatabase extends Command
 
     private function migrateTables()
     {
-        // Lấy danh sách các bảng từ MSSQL Server
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
 
         foreach ($tables as $table) {
             $tableName = $table->TABLE_NAME;
 
             try {
-                // Lấy cấu trúc bảng từ MSSQL Server
                 $columns = DB::connection('sqlsrv')->select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$tableName]);
 
-                // Kiểm tra xem bảng có tồn tại trong MySQL hay không
                 if (!Schema::connection('mysql')->hasTable($tableName)) {
-                    // Tạo bảng tương ứng trong MySQL
                     Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
                         foreach ($columns as $column) {
                             $columnName = $column->COLUMN_NAME;
@@ -65,7 +61,6 @@ class MigrateDatabase extends Command
                             $isNullable = $column->IS_NULLABLE === 'YES';
                             $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
 
-                            // Chuyển đổi kiểu dữ liệu từ MSSQL sang MySQL
                             switch ($dataType) {
                                 case 'int':
                                     $table->integer($columnName)->nullable($isNullable);
@@ -82,7 +77,6 @@ class MigrateDatabase extends Command
                                 case 'bit':
                                     $table->boolean($columnName)->nullable($isNullable);
                                     break;
-                                // Thêm các kiểu dữ liệu khác nếu cần
                                 default:
                                     $table->string($columnName)->nullable($isNullable);
                                     break;
@@ -95,19 +89,28 @@ class MigrateDatabase extends Command
                     $this->info("Table {$tableName} already exists in MySQL.");
                 }
 
-                // Truncate bảng trước khi di chuyển dữ liệu
-                DB::connection('mysql')->table($tableName)->truncate();
+                $mysqlDataCount = DB::connection('mysql')->table($tableName)->count();
+                if ($mysqlDataCount > 0) {
+                    $this->info("Table {$tableName} already has data in MySQL. Skipping data migration.");
+                    continue;
+                }
 
-                // Di chuyển dữ liệu từ MSSQL Server sang MySQL
                 $data = DB::connection('sqlsrv')->table($tableName)->get();
                 foreach ($data as $row) {
                     DB::connection('mysql')->table($tableName)->insert((array) $row);
                 }
                 $this->info("Data of table {$tableName} migrated successfully.");
             } catch (\Exception $e) {
-                // Ghi log lỗi và tiếp tục với bảng tiếp theo
                 \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
-                $this->error("Error migrating table {$tableName}. Check log for details.");
+                $this->error("Error migrating table {$tableName}. ");
+
+                DB::connection('mysql')->table('migration_errors')->insert([
+                    'table_name' => $tableName,
+                    'error_message' => $e->getMessage(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
                 continue;
             }
         }
@@ -116,35 +119,54 @@ class MigrateDatabase extends Command
 
     private function migrateViews()
     {
-        // Lấy danh sách các view từ MSSQL Server
         $views = DB::connection('sqlsrv')->select('SELECT TABLE_NAME, VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS');
 
         foreach ($views as $view) {
             $viewName = $view->TABLE_NAME;
             $viewDefinition = $view->VIEW_DEFINITION;
 
-            // Tạo view tương ứng trong MySQL
-            DB::connection('mysql')->statement("CREATE VIEW {$viewName} AS {$viewDefinition}");
+            try {
+                DB::connection('mysql')->statement("CREATE VIEW {$viewName} AS {$viewDefinition}");
+                $this->info("View {$viewName} created successfully in MySQL.");
+            } catch (\Exception $e) {
+                \Log::error("Error creating view {$viewName}: " . $e->getMessage());
+                $this->error("Error creating view {$viewName}. Check log for details.");
 
-            $this->info("View {$viewName} created successfully in MySQL.");
+                DB::connection('mysql')->table('migration_errors')->insert([
+                    'table_name' => $viewName,
+                    'error_message' => $e->getMessage(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
     }
 
     private function migrateStoredProcedures()
     {
-        // Lấy danh sách các stored procedure từ MSSQL Server
         $procedures = DB::connection('sqlsrv')->select("SELECT SPECIFIC_NAME, ROUTINE_DEFINITION FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE = 'PROCEDURE'");
 
         foreach ($procedures as $procedure) {
             $procedureName = $procedure->SPECIFIC_NAME;
             $procedureDefinition = $procedure->ROUTINE_DEFINITION;
 
-            // Tạo stored procedure tương ứng trong MySQL
-            DB::connection('mysql')->unprepared("DROP PROCEDURE IF EXISTS {$procedureName};");
-            DB::connection('mysql')->unprepared("CREATE PROCEDURE {$procedureName} {$procedureDefinition}");
+            try {
+                DB::connection('mysql')->unprepared("DROP PROCEDURE IF EXISTS {$procedureName};");
+                DB::connection('mysql')->unprepared("CREATE PROCEDURE {$procedureName} {$procedureDefinition}");
+                $this->info("Stored Procedure {$procedureName} created successfully in MySQL.");
+            } catch (\Exception $e) {
+                \Log::error("Error creating stored procedure {$procedureName}: " . $e->getMessage());
+                $this->error("Error creating stored procedure {$procedureName}. Check log for details.");
 
-            $this->info("Stored Procedure {$procedureName} created successfully in MySQL.");
+                DB::connection('mysql')->table('migration_errors')->insert([
+                    'table_name' => $procedureName,
+                    'error_message' => $e->getMessage(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
     }
+
 
 }
