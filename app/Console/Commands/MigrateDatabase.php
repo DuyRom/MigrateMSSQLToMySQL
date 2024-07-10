@@ -67,7 +67,11 @@ class MigrateDatabase extends Command
 
                             switch ($dataType) {
                                 case 'int':
-                                    $table->integer($columnName)->nullable($isNullable);
+                                    if ($columnName === 'id') {
+                                        $table->increments($columnName);
+                                    } else {
+                                        $table->integer($columnName)->nullable($isNullable);
+                                    }
                                     break;
                                 case 'varchar':
                                     $table->string($columnName, $maxLength)->nullable($isNullable);
@@ -124,6 +128,11 @@ class MigrateDatabase extends Command
                     });
                 }
 
+                if (Schema::connection('mysql')->hasColumn($tableName, 'id')) {
+                    $maxId = DB::connection('mysql')->table($tableName)->max('id');
+                    DB::statement("ALTER TABLE {$tableName} AUTO_INCREMENT = " . ($maxId + 1));
+                }
+
                 DB::connection('mysql')->table('migration_status')->updateOrInsert(
                     ['table_name' => $tableName],
                     [
@@ -162,7 +171,6 @@ class MigrateDatabase extends Command
 
         Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
     }
-
 
     private function migrateViews()
     {
