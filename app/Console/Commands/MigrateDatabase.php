@@ -37,8 +37,8 @@ class MigrateDatabase extends Command
      public function handle()
     {
         $this->migrateTables();
-        $this->migrateViews();
-        $this->migrateStoredProcedures();
+        //$this->migrateViews();
+        //$this->migrateStoredProcedures();
 
         $this->info('Database migration completed successfully.');
     }
@@ -77,6 +77,12 @@ class MigrateDatabase extends Command
                                 case 'bit':
                                     $table->boolean($columnName)->nullable($isNullable);
                                     break;
+                                case 'binary':
+                                    $table->binary($columnName)->nullable($isNullable);
+                                    break;
+                                case 'image':
+                                    $table->binary($columnName)->nullable($isNullable);
+                                    break;
                                 default:
                                     $table->string($columnName)->nullable($isNullable);
                                     break;
@@ -95,10 +101,24 @@ class MigrateDatabase extends Command
                     continue;
                 }
 
-                $data = DB::connection('sqlsrv')->table($tableName)->get();
-                foreach ($data as $row) {
-                    DB::connection('mysql')->table($tableName)->insert((array) $row);
-                }
+                $totalMigrated = 0;
+                DB::connection('sqlsrv')->table($tableName)->orderBy('id')->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
+                    foreach ($rows as $row) {
+                        DB::connection('mysql')->table($tableName)->insert((array) $row);
+                        $totalMigrated++;
+                    }
+                    $this->info("Chunk of data for table {$tableName} migrated successfully.");
+                });
+
+                DB::connection('mysql')->table('migration_status')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'records_migrated' => $totalMigrated,
+                        'migration_success' => true,
+                        'updated_at' => now(),
+                    ]
+                );
+
                 $this->info("Data of table {$tableName} migrated successfully.");
             } catch (\Exception $e) {
                 \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
@@ -111,11 +131,19 @@ class MigrateDatabase extends Command
                     'updated_at' => now(),
                 ]);
 
+                DB::connection('mysql')->table('migration_status')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'records_migrated' => $totalMigrated ?? 0,
+                        'migration_success' => false,
+                        'updated_at' => now(),
+                    ]
+                );
+
                 continue;
             }
         }
     }
-
 
     private function migrateViews()
     {
