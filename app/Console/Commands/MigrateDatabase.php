@@ -132,6 +132,7 @@ class MigrateDatabase extends Command
 
                 if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
                     $maxId = DB::connection('mysql')->table($tableName)->max('id');
+                    $maxId = intval($maxId);
                     DB::statement("ALTER TABLE {$tableName} AUTO_INCREMENT = " . ($maxId + 1));
                     
                     $primaryKey = DB::select(DB::raw("SHOW KEYS FROM {$tableName} WHERE Key_name = 'PRIMARY' AND Column_name = 'id'"));
