@@ -76,7 +76,12 @@ class MigrateDatabase extends Command
                                     }
                                     break;                                
                                 case 'varchar':
-                                    $table->string($columnName, $maxLength)->nullable($isNullable);
+                                case 'nvarchar':
+                                    if ($maxLength > 255) {
+                                        $table->text($columnName)->nullable($isNullable);
+                                    } else {
+                                        $table->string($columnName, $maxLength)->nullable($isNullable);
+                                    }
                                     break;
                                 case 'text':
                                     $table->text($columnName)->nullable($isNullable);
@@ -123,29 +128,13 @@ class MigrateDatabase extends Command
                 } else {
                     $firstColumn = Schema::connection('sqlsrv')->getColumnListing($tableName)[0];
     
-                    // DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
-                    //     foreach ($rows as $row) {
-                    //         DB::connection('mysql')->table($tableName)->insert((array) $row);
-                    //         $totalMigrated++;
-                    //     }
-                    //     $this->info("Chunk of data for table {$tableName} migrated successfully.");
-                    // });
-
                     DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
                         foreach ($rows as $row) {
-                            $rowArray = (array) $row;
-                            foreach ($rowArray as $column => $value) {
-                                if ($value === '') {
-                                    $rowArray[$column] = null;
-                                }
-                            }
-                    
-                            DB::connection('mysql')->table($tableName)->insert($rowArray);
+                            DB::connection('mysql')->table($tableName)->insert((array) $row);
                             $totalMigrated++;
                         }
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
-                    
                 }
 
                 if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
@@ -199,6 +188,7 @@ class MigrateDatabase extends Command
         }
 
         Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
+        \Log::info('Database migration completed successfully.', ['successful' => $successfulMigrations, 'failed' => $failedMigrations]);
     }
 
     private function migrateViews()
