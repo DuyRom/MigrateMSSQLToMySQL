@@ -67,12 +67,12 @@ class MigrateDatabase extends Command
 
                             switch ($dataType) {
                                 case 'int':
-                                    if ($columnName === 'id') {
+                                    if (strtolower($columnName) === 'id' && config('database.id_auto_increment')) {
                                         $table->increments($columnName);
                                     } else {
                                         $table->integer($columnName)->nullable($isNullable);
                                     }
-                                    break;
+                                    break;                                
                                 case 'varchar':
                                     $table->string($columnName, $maxLength)->nullable($isNullable);
                                     break;
@@ -119,7 +119,9 @@ class MigrateDatabase extends Command
                         $this->info("Chunk of data for table {$tableName} migrated successfully.");
                     });
                 } else {
-                    DB::connection('sqlsrv')->table($tableName)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
+                    $firstColumn = Schema::connection('sqlsrv')->getColumnListing($tableName)[0];
+    
+                    DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
                         foreach ($rows as $row) {
                             DB::connection('mysql')->table($tableName)->insert((array) $row);
                             $totalMigrated++;
@@ -128,9 +130,14 @@ class MigrateDatabase extends Command
                     });
                 }
 
-                if (Schema::connection('mysql')->hasColumn($tableName, 'id')) {
+                if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
                     $maxId = DB::connection('mysql')->table($tableName)->max('id');
                     DB::statement("ALTER TABLE {$tableName} AUTO_INCREMENT = " . ($maxId + 1));
+                    
+                    $primaryKey = DB::select(DB::raw("SHOW KEYS FROM {$tableName} WHERE Key_name = 'PRIMARY' AND Column_name = 'id'"));
+                    if (empty($primaryKey) && config('database.primary_key') === 'id'){
+                        DB::statement("ALTER TABLE {$tableName} ADD PRIMARY KEY (id)");
+                    }
                 }
 
                 DB::connection('mysql')->table('migration_status')->updateOrInsert(

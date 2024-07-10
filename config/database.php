@@ -147,4 +147,7 @@ return [
 
     ],
 
+    'id_auto_increment' => env('ID_AUTO_INCREMENT', true),
+    'primary_key' => env('PRIMARY_KEY', 'id'),
+
 ];
