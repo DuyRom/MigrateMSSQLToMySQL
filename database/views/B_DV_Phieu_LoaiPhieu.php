@@ -1,4 +1,5 @@
 <?php
+namespace App\databases\views;
 
 use Illuminate\Support\Facades\DB;
 use App\Helpers\ViewHelper;

@@ -1,30 +1,117 @@
-[2024-07-12 16:34:42] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
+[2024-07-12 17:22:02] local.ERROR: Error creating view L_ThuChi_CH: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.l_thuchi' doesn't exist (SQL: CREATE VIEW `L_ThuChi_CH` AS SELECT   L_ThuChi.*
+FROM         L_ThuChi
+WHERE     (KhoHangXuatID <> 26))  
+[2024-07-12 17:22:03] local.ERROR: Error creating view L_Xe_NhapTraLe: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.v_baobien_gv' doesn't exist (SQL: CREATE VIEW `L_Xe_NhapTraLe` AS 
+SELECT   TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, M.SoKhung, M.SoMay, BL.TuVanID, BL.HinhThucBan, TL.ThanhTienXe, 
+                         TL.PhiBaoBien AS ThanhTienBB, TL.GiaPhuKien AS ThanhTienPK, M.XeID, BL.GiaSonXe AS ThanhTienSon, M.DonGia_CoVAT AS TienVonXe, 
+                         V_XeSonXeMax.GiaNhap AS TienVonSon, V_BaoBien_GV.SoTien AS TienVonBB, V_PK_ThanhTienVon_XeBanLe.TienVonPK
+FROM         XeNhapTraLaiBanLe AS TL INNER JOIN
+                         XeBanLe AS BL ON TL.XeBanLeID = BL.ID INNER JOIN
+                         XeNhapMua AS M ON BL.XeNhapMuaID = M.ID LEFT OUTER JOIN
+                         V_BaoBien_GV ON BL.ID = V_BaoBien_GV.XeBanLeID LEFT OUTER JOIN
+                         V_PK_ThanhTienVon_XeBanLe ON BL.ID = V_PK_ThanhTienVon_XeBanLe.XeBanLeID LEFT OUTER JOIN
+                         V_XeSonXeMax ON BL.XeNhapMuaID = V_XeSonXeMax.XeNhapMuaID)  
+[2024-07-12 17:22:03] local.ERROR: Error creating view L_Xe_NhapTraLe_Master2: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.l_xe_nhaptrale' doesn't exist (SQL: CREATE VIEW `L_Xe_NhapTraLe_Master2` AS SELECT   ID, XeBanLeID, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, XeID, TienVonXe, TienVonBB, TienVonPK
+FROM         L_Xe_NhapTraLe)  
+[2024-07-12 17:22:06] local.ERROR: Error creating view A_ThuChi_All: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.v_taikhoantienmat' doesn't exist (SQL: CREATE VIEW `A_ThuChi_All` AS SELECT        T .ID, T .SoCT, T .NgayCT, T .ngayct AS NgayHachToan, T .TaiKhoanID, T .SoTien, A.KhoHangXuatID AS KhoHangID, A.khohangxuatid AS KhoHachToanID, A.KhachHangID, T .TacNghiep, T .LyDoID, NULL AS NguoiNopNhan, 
+                         T .CreatedBy, NULL AS GhiChu
+FROM            XeBanLe AS A INNER JOIN
+                         XeBanLeThanhToan AS T ON A.ID = T .XeBanLeID
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        T .ID, T .SoCT, T .NgayCT, T .ngayct AS NgayHachToan, T .TaiKhoanID, T .SoTien, A.KhoHangXuatID AS KhoHangID, A.khohangxuatid AS KhoHachToanID, A.KhachHangID, T .TacNghiep, T .LyDoID, NULL AS NguoiNopNhan, 
+                         T .CreatedBy, NULL AS GhiChu
+FROM            XeBanSi AS A INNER JOIN
+                         XeBanSiThanhToan AS T ON A.ID = T .XeBanSiID
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        ID, SoCT, NgayCT, NgayHachToan, TaiKhoanID, SoTien, KhoHangID, KhoHachToanID, KhachHangID, 0 AS TacNghiep, ThuTienLyDoID, NguoiNop AS NguoiNopNhan, T .CreatedBy, T .GhiChu
+FROM            ThuTien AS T
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        T .ID, T .SoCT, T .NgayCT, T .NgayHachToan, T .TaiKhoanID, T .SoTien, T .KhoHangID, T .KhoHachToanID, T .KhachHangID, 1 AS TacNghiep, T .ChiTienLyDoID AS LyDoID, NguoiNhan AS NguoiNopNhan, T .CreatedBy, 
+                         T .GhiChu
+FROM            ChiTien AS T
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        S.ID, S.SoCT, S.NgayCT, S.ngayct AS NgayHachToan, S.TaiKhoanID, S.GiaNhap AS SoTien, S.KhoHangID, S.khohangid AS KhoHachToanID, NULL AS KhachHangID, 1 AS TacNghiep, 102 AS LyDoID, NULL AS NguoiNopNhan, 
+                         S.CreatedBy, NULL AS GhiChu
+FROM            XeSonXe AS S
+WHERE        S.gianhap > 0 AND S.NgayCT IS NOT NULL
+UNION ALL
+SELECT        T .ID, T .SoCT, T .NgayCT, T .ngayct AS NgayHachToan, T .TaiKhoanID, T .SoTien, A.KhoHangXuatID AS KhoHangID, A.khohangxuatid AS KhoHachToanID, A.KhachHangID, T .TacNghiep, T .LyDoID, NULL AS NguoiNopNhan, 
+                         T .CreatedBy, NULL AS GhiChu
+FROM            DVBanLe AS A INNER JOIN
+                         DVBanLeThanhToan AS T ON A.ID = T .DVBanLeID
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        T .ID, T .SoCT, T .NgayCT, T .ngayct AS NgayHachToan, T .TaiKhoanID, T .SoTien, A.KhoHangXuatID AS KhoHangID, A.khohangxuatid AS KhoHachToanID, A.KhachHangID, T .TacNghiep, T .LyDoID, NULL AS NguoiNopNhan, 
+                         T .CreatedBy, NULL AS GhiChu
+FROM            DVBanSi AS A INNER JOIN
+                         DVBanSiThanhToan AS T ON A.ID = T .DVBanSiID
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        T .ID, T .SoCT, T .NgayCT, T .ngayct AS NgayHachToan, T .TaiKhoanID, T .SoTien, A.KhoHangXuatID AS KhoHangID, A.khohangxuatid AS KhoHachToanID, A.KhachHangID, T .TacNghiep, T .LyDoID, NULL AS NguoiNopNhan, 
+                         T .CreatedBy, NULL AS GhiChu
+FROM            DVBanBuon AS A INNER JOIN
+                         DVBanBuonThanhToan AS T ON A.ID = T .DVBanBuonID
+WHERE        T .SoTien > 0
+UNION ALL
+SELECT        G.ID, A.SoCT, G.NgayGC AS NgayCT, G.NgayGC AS NgayHachToan, T .TaiKhoanID, G.ChiPhi AS SoTien, A.KhoHangXuatID AS KhoHangID, A.khohangxuatid AS KhoHachToanID, NULL AS KhachHangID, 1 AS TacNghiep, 
+                         103 AS LyDoID, NULL AS NguoiNopNhan, G.CreatedBy, NULL AS GhiChu
+FROM            DVBanLe AS A INNER JOIN
+                         V_TaiKhoanTienMat AS T ON A.KhoHangXuatID = T .KhoHangID INNER JOIN
+                         DVBanLeGiaCong AS G ON A.ID = G.DVBanLeID
+WHERE        G.ChiPhi > 0
+UNION ALL
+SELECT        ID, NULL AS SoCT, Thang AS NgayCT, Thang AS NgayHachToan, 20 AS TaiKhoanID, SoTien, KhoHangID, KhoHachToanID, NULL AS KhachHangID, 1 AS TacNghiep, CASE WHEN Loai IN ('Luong', 'DCTang', 'DCGiam', 'Phat', 
+                         'Them') THEN 149 WHEN Loai IN ('Thuong') THEN 150 WHEN Loai IN ('BH-CN', 'BH-CT') THEN 152 ELSE NULL END AS LyDoID, NULL AS NguoiNopNhan, 1 AS CreatedBy, NULL AS GhiChu
+FROM            BangLuong
+WHERE        Loai <> 'CongNo'
+UNION ALL
+SELECT        A.ID, A.SoCT, B.NgayXuat AS NgayCT, B.NgayXuat AS NgayHachToan, 20 AS TaiKhoanID, B.TienVon AS SoTien, A.KhoHangXuatID AS KhoHangID, A.KhoHangXuatID AS KhoHachToanID, A.KhachHangID, 1 AS TacNghiep, 
+                         151 AS LyDoID, NULL AS NguoiNopNhan, B.CreatedBy, B.GhiChu
+FROM            XeBanLe AS A INNER JOIN
+                         XeBanLeKhuyenMai AS B ON A.ID = B.XeBanLeID
+UNION ALL
+SELECT        ID, SoCT, NgayCT, NgayCT AS NgayHachToan, 20 AS TaiKhoanID, GV AS SoTien, KhoHangXuatID AS KhoHangID, KhoHangXuatID AS KhoHachToanID, KhachHangID, 1 AS TacNghiep, 
+                         CASE WHEN lydo = 'Xuất khuyến mãi' THEN 104 WHEN lydo = 'Xuất tài sản' THEN 20 ELSE NULL END AS LyDoID, NULL AS NguoiNopNhan, CreatedBy, GhiChu
+FROM            A_BH_Xe_XuatKhac
+)  
+[2024-07-12 17:22:06] local.ERROR: Error creating view A_ThuChi_CH: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_thuchi_all' doesn't exist (SQL: CREATE VIEW `A_ThuChi_CH` AS SELECT        ID, SoCT, NgayCT, NgayHachToan, TaiKhoanID, SoTien, KhoHangID, KhoHachToanID, KhachHangID, TacNghiep, LyDoID, NguoiNopNhan, CreatedBy, GhiChu
+FROM            A_ThuChi_All
+WHERE        (KhoHangID <> 26))  
+[2024-07-12 17:22:06] local.ERROR: Error creating view vTemp_PKBH_TON_AM: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.vtemp_pkbh' doesn't exist (SQL: CREATE VIEW `vTemp_PKBH_TON_AM` AS SELECT        X.VatTuID, X.KhoHangXuatID, X.NAM, X.THANG, N.SL AS SLN, X.SL AS SLX, X.SL - IFNULL(N.SL, 0) AS SLTON
+FROM            vTemp_PKBH AS X LEFT OUTER JOIN
+                         vTemp_PKBH_Nhap AS N ON X.VatTuID = N.VatTuID AND X.NAM = N.NAM AND X.THANG = N.THANG AND X.KhoHangXuatID = N.KhoHangNhapID)  
+[2024-07-12 17:22:16] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
 WHERE     sl <> 0' at line 4 (SQL: CREATE VIEW `B_DV_Phieu_LoaiPhieu` AS SELECT   NgayCT, KhoHangXuatID, LoaiPhieu, SL
 FROM         (SELECT   *
                            FROM         B_DV_Phieu_XuatBanCH_All
                            WHERE     kythuatvien IS NOT NULL AND kiemtracuoi IS NOT NULL) p  AS unpvt
 WHERE     sl <> 0)  
-[2024-07-12 16:34:42] local.ERROR: Error creating view A_DV_LoaiPhieu: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
+[2024-07-12 17:22:16] local.ERROR: Error creating view A_DV_LoaiPhieu: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
 FROM         B_DV_Phieu_LoaiPhieu
 GROUP BY NgayCT, KhoHangXuatID, LoaiPhieu
 ORDER BY NgayCT)  
-[2024-07-12 16:34:43] local.ERROR: Error creating view A_BH_Xe_XuatBanCH: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`))...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
+[2024-07-12 17:22:16] local.ERROR: Error creating view A_BH_Xe_XuatBanCH: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt
+WHERE     (TG <> 0) OR
+                         (DT <> 0) OR
+      ...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
 FROM         (SELECT   ID, SoCT, NgayCT, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 
                                                     2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) AS ChiTieu
-                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`)) AS pvt
+                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt
 WHERE     (TG <> 0) OR
                          (DT <> 0) OR
                          (GV <> 0))  
-[2024-07-12 16:34:43] local.ERROR: Error creating view L_Xe_XuatBanLe: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
+[2024-07-12 17:22:16] local.ERROR: Error creating view L_Xe_XuatBanLe: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
 FROM            XeBanLe LEFT OUTER JOIN
                          A_BH_Xe_XuatBanCH ON XeBanLe.ID = A_BH_Xe_XuatBanCH.ID)  
-[2024-07-12 16:34:43] local.ERROR: Error creating view A_BH_Xe_NhapTraCH: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
+[2024-07-12 17:22:17] local.ERROR: Error creating view A_BH_Xe_NhapTraCH: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
 FROM   (SELECT ID, SoCT, NgayCT, XeBanLeID, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) 
                            AS ChiTieu
-             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt)  
-[2024-07-12 16:34:44] local.ERROR: Error creating view vTemp_TestGiaVon: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
+             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt)  
+[2024-07-12 17:22:18] local.ERROR: Error creating view vTemp_TestGiaVon: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.Gia...' at line 5 (SQL: CREATE VIEW `vTemp_TestGiaVon` AS SELECT        DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID INNER JOIN
@@ -32,7 +119,7 @@ FROM            DVBanLe INNER JOIN
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 HAVING        (DVBanLeVatTu.TienVon < 0) AND (DVBanLe.KhoHangXuatID = 1))  
-[2024-07-12 16:34:45] local.ERROR: Error creating view B_BH_Xe_XuatBanCH: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
+[2024-07-12 17:22:19] local.ERROR: Error creating view B_BH_Xe_XuatBanCH: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
                          'XuatBanCH' AS NghiepVu, CAST(L.DonGia + L.GiaThayVanh + IFNULL(TG.TienHangXeTG, 0 AS SIGNED)) AS DTXe, CAST(L.PhiBaoBien + IFNULL(TG.TienHangBaoBienTG, 0 AS SIGNED) 
                          - L.BHXMThu) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(IFNULL(GVBB.SoTien, 0 AS SIGNED)) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM         XeBanLe AS L INNER JOIN
@@ -41,51 +128,52 @@ FROM         XeBanLe AS L INNER JOIN
                          B_BaoBien_GV AS GVBB ON L.ID = GVBB.XeBanLeID LEFT OUTER JOIN
                          B_XeBanCHGiaTangGiam AS TG ON L.ID = TG.XeBanLeID
 WHERE     (L.NgayBan IS NOT NULL))  
-[2024-07-12 16:34:45] local.ERROR: Error creating view V_ChiTienPowerApp: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
+[2024-07-12 17:22:19] local.ERROR: Error creating view V_ChiTienPowerApp: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
                          A.Approval2By, A.Approval2At, A.CreatedBy, A.CreatedAt, A.UpdatedBy, A.UpdatedAt, A.DeletedBy, A.DeletedAt
 FROM            ChiTien AS A INNER JOIN
                          KhoHang AS K ON A.KhoHangID = K.ID INNER JOIN
                          CuaHang AS C ON K.CuaHangID = C.ID
 WHERE        (A.NgayCT >= CONVERT(date, DATEADD(day, - 30, NOW()), 105)))  
-[2024-07-12 16:34:45] local.ERROR: Error creating view View_1: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
+[2024-07-12 17:22:19] local.ERROR: Error creating view View_1: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanL...' at line 4 (SQL: CREATE VIEW `View_1` AS SELECT        DVBanLeVatTu.VatTuID
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanLeVatTu.VatTuID)  
-[2024-07-12 16:34:45] local.ERROR: Error creating view B_BH_Xe_NhapTraCH: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
+[2024-07-12 17:22:19] local.ERROR: Error creating view B_BH_Xe_NhapTraCH: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM   XeNhapTraLaiBanLe AS TL INNER JOIN
              XeBanLe AS BL ON TL.XeBanLeID = BL.ID INNER JOIN
              XeNhapMua AS M ON BL.XeNhapMuaID = M.ID LEFT OUTER JOIN
              B_BaoBien_GV AS GVBB ON BL.ID = GVBB.XeBanLeID LEFT OUTER JOIN
              B_XeBanCHGiaTangGiam AS TG ON BL.ID = TG.XeBanLeID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
+[2024-07-12 17:22:20] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
 WHERE     sl <> 0' at line 4 (SQL: CREATE VIEW `B_DV_Phieu_LoaiPhieu` AS SELECT   NgayCT, KhoHangXuatID, LoaiPhieu, SL
 FROM         (SELECT   *
                            FROM         B_DV_Phieu_XuatBanCH_All
                            WHERE     kythuatvien IS NOT NULL AND kiemtracuoi IS NOT NULL) p  AS unpvt
 WHERE     sl <> 0)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_DV_LoaiPhieu on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
+[2024-07-12 17:22:20] local.ERROR: Error creating view A_DV_LoaiPhieu on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
 FROM         B_DV_Phieu_LoaiPhieu
 GROUP BY NgayCT, KhoHangXuatID, LoaiPhieu
 ORDER BY NgayCT)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`))...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
+[2024-07-12 17:22:20] local.ERROR: Error creating view A_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt
+WHERE     (TG <> 0) OR
+                         (DT <> 0) OR
+      ...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
 FROM         (SELECT   ID, SoCT, NgayCT, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 
                                                     2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) AS ChiTieu
-                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`)) AS pvt
+                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt
 WHERE     (TG <> 0) OR
                          (DT <> 0) OR
                          (GV <> 0))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view L_Xe_XuatBanLe on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
+[2024-07-12 17:22:20] local.ERROR: Error creating view L_Xe_XuatBanLe on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
 FROM            XeBanLe LEFT OUTER JOIN
                          A_BH_Xe_XuatBanCH ON XeBanLe.ID = A_BH_Xe_XuatBanCH.ID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
+[2024-07-12 17:22:20] local.ERROR: Error creating view A_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
 FROM   (SELECT ID, SoCT, NgayCT, XeBanLeID, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) 
                            AS ChiTieu
-             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view vTemp_TestGiaVon on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
+             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt)  
+[2024-07-12 17:22:20] local.ERROR: Error creating view vTemp_TestGiaVon on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.Gia...' at line 5 (SQL: CREATE VIEW `vTemp_TestGiaVon` AS SELECT        DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID INNER JOIN
@@ -93,7 +181,7 @@ FROM            DVBanLe INNER JOIN
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 HAVING        (DVBanLeVatTu.TienVon < 0) AND (DVBanLe.KhoHangXuatID = 1))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
+[2024-07-12 17:22:20] local.ERROR: Error creating view B_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
                          'XuatBanCH' AS NghiepVu, CAST(L.DonGia + L.GiaThayVanh + IFNULL(TG.TienHangXeTG, 0 AS SIGNED)) AS DTXe, CAST(L.PhiBaoBien + IFNULL(TG.TienHangBaoBienTG, 0 AS SIGNED) 
                          - L.BHXMThu) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(IFNULL(GVBB.SoTien, 0 AS SIGNED)) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM         XeBanLe AS L INNER JOIN
@@ -102,51 +190,52 @@ FROM         XeBanLe AS L INNER JOIN
                          B_BaoBien_GV AS GVBB ON L.ID = GVBB.XeBanLeID LEFT OUTER JOIN
                          B_XeBanCHGiaTangGiam AS TG ON L.ID = TG.XeBanLeID
 WHERE     (L.NgayBan IS NOT NULL))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view V_ChiTienPowerApp on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
+[2024-07-12 17:22:20] local.ERROR: Error creating view V_ChiTienPowerApp on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
                          A.Approval2By, A.Approval2At, A.CreatedBy, A.CreatedAt, A.UpdatedBy, A.UpdatedAt, A.DeletedBy, A.DeletedAt
 FROM            ChiTien AS A INNER JOIN
                          KhoHang AS K ON A.KhoHangID = K.ID INNER JOIN
                          CuaHang AS C ON K.CuaHangID = C.ID
 WHERE        (A.NgayCT >= CONVERT(date, DATEADD(day, - 30, NOW()), 105)))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view View_1 on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
+[2024-07-12 17:22:20] local.ERROR: Error creating view View_1 on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanL...' at line 4 (SQL: CREATE VIEW `View_1` AS SELECT        DVBanLeVatTu.VatTuID
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanLeVatTu.VatTuID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
+[2024-07-12 17:22:20] local.ERROR: Error creating view B_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM   XeNhapTraLaiBanLe AS TL INNER JOIN
              XeBanLe AS BL ON TL.XeBanLeID = BL.ID INNER JOIN
              XeNhapMua AS M ON BL.XeNhapMuaID = M.ID LEFT OUTER JOIN
              B_BaoBien_GV AS GVBB ON BL.ID = GVBB.XeBanLeID LEFT OUTER JOIN
              B_XeBanCHGiaTangGiam AS TG ON BL.ID = TG.XeBanLeID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
+[2024-07-12 17:22:20] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
 WHERE     sl <> 0' at line 4 (SQL: CREATE VIEW `B_DV_Phieu_LoaiPhieu` AS SELECT   NgayCT, KhoHangXuatID, LoaiPhieu, SL
 FROM         (SELECT   *
                            FROM         B_DV_Phieu_XuatBanCH_All
                            WHERE     kythuatvien IS NOT NULL AND kiemtracuoi IS NOT NULL) p  AS unpvt
 WHERE     sl <> 0)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_DV_LoaiPhieu on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
+[2024-07-12 17:22:20] local.ERROR: Error creating view A_DV_LoaiPhieu on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
 FROM         B_DV_Phieu_LoaiPhieu
 GROUP BY NgayCT, KhoHangXuatID, LoaiPhieu
 ORDER BY NgayCT)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`))...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
+[2024-07-12 17:22:21] local.ERROR: Error creating view A_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt
+WHERE     (TG <> 0) OR
+                         (DT <> 0) OR
+      ...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
 FROM         (SELECT   ID, SoCT, NgayCT, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 
                                                     2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) AS ChiTieu
-                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`)) AS pvt
+                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt
 WHERE     (TG <> 0) OR
                          (DT <> 0) OR
                          (GV <> 0))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view L_Xe_XuatBanLe on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
+[2024-07-12 17:22:21] local.ERROR: Error creating view L_Xe_XuatBanLe on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
 FROM            XeBanLe LEFT OUTER JOIN
                          A_BH_Xe_XuatBanCH ON XeBanLe.ID = A_BH_Xe_XuatBanCH.ID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
+[2024-07-12 17:22:21] local.ERROR: Error creating view A_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
 FROM   (SELECT ID, SoCT, NgayCT, XeBanLeID, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) 
                            AS ChiTieu
-             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view vTemp_TestGiaVon on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
+             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt)  
+[2024-07-12 17:22:21] local.ERROR: Error creating view vTemp_TestGiaVon on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.Gia...' at line 5 (SQL: CREATE VIEW `vTemp_TestGiaVon` AS SELECT        DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID INNER JOIN
@@ -154,7 +243,7 @@ FROM            DVBanLe INNER JOIN
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 HAVING        (DVBanLeVatTu.TienVon < 0) AND (DVBanLe.KhoHangXuatID = 1))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
+[2024-07-12 17:22:21] local.ERROR: Error creating view B_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
                          'XuatBanCH' AS NghiepVu, CAST(L.DonGia + L.GiaThayVanh + IFNULL(TG.TienHangXeTG, 0 AS SIGNED)) AS DTXe, CAST(L.PhiBaoBien + IFNULL(TG.TienHangBaoBienTG, 0 AS SIGNED) 
                          - L.BHXMThu) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(IFNULL(GVBB.SoTien, 0 AS SIGNED)) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM         XeBanLe AS L INNER JOIN
@@ -163,51 +252,52 @@ FROM         XeBanLe AS L INNER JOIN
                          B_BaoBien_GV AS GVBB ON L.ID = GVBB.XeBanLeID LEFT OUTER JOIN
                          B_XeBanCHGiaTangGiam AS TG ON L.ID = TG.XeBanLeID
 WHERE     (L.NgayBan IS NOT NULL))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view V_ChiTienPowerApp on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
+[2024-07-12 17:22:21] local.ERROR: Error creating view V_ChiTienPowerApp on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
                          A.Approval2By, A.Approval2At, A.CreatedBy, A.CreatedAt, A.UpdatedBy, A.UpdatedAt, A.DeletedBy, A.DeletedAt
 FROM            ChiTien AS A INNER JOIN
                          KhoHang AS K ON A.KhoHangID = K.ID INNER JOIN
                          CuaHang AS C ON K.CuaHangID = C.ID
 WHERE        (A.NgayCT >= CONVERT(date, DATEADD(day, - 30, NOW()), 105)))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view View_1 on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
+[2024-07-12 17:22:21] local.ERROR: Error creating view View_1 on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanL...' at line 4 (SQL: CREATE VIEW `View_1` AS SELECT        DVBanLeVatTu.VatTuID
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanLeVatTu.VatTuID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
+[2024-07-12 17:22:21] local.ERROR: Error creating view B_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM   XeNhapTraLaiBanLe AS TL INNER JOIN
              XeBanLe AS BL ON TL.XeBanLeID = BL.ID INNER JOIN
              XeNhapMua AS M ON BL.XeNhapMuaID = M.ID LEFT OUTER JOIN
              B_BaoBien_GV AS GVBB ON BL.ID = GVBB.XeBanLeID LEFT OUTER JOIN
              B_XeBanCHGiaTangGiam AS TG ON BL.ID = TG.XeBanLeID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
+[2024-07-12 17:22:21] local.ERROR: Error creating view B_DV_Phieu_LoaiPhieu on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS unpvt
 WHERE     sl <> 0' at line 4 (SQL: CREATE VIEW `B_DV_Phieu_LoaiPhieu` AS SELECT   NgayCT, KhoHangXuatID, LoaiPhieu, SL
 FROM         (SELECT   *
                            FROM         B_DV_Phieu_XuatBanCH_All
                            WHERE     kythuatvien IS NOT NULL AND kiemtracuoi IS NOT NULL) p  AS unpvt
 WHERE     sl <> 0)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_DV_LoaiPhieu on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
+[2024-07-12 17:22:21] local.ERROR: Error creating view A_DV_LoaiPhieu on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.b_dv_phieu_loaiphieu' doesn't exist (SQL: CREATE VIEW `A_DV_LoaiPhieu` AS SELECT    NgayCT, KhoHangXuatID, REPLACE(LoaiPhieu, 'KiemTraDinhKy', 'IsKTDK') AS LoaiPhieu, COUNT(SL) AS SL
 FROM         B_DV_Phieu_LoaiPhieu
 GROUP BY NgayCT, KhoHangXuatID, LoaiPhieu
 ORDER BY NgayCT)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`))...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
+[2024-07-12 17:22:21] local.ERROR: Error creating view A_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt
+WHERE     (TG <> 0) OR
+                         (DT <> 0) OR
+      ...' at line 4 (SQL: CREATE VIEW `A_BH_Xe_XuatBanCH` AS SELECT   *
 FROM         (SELECT   ID, SoCT, NgayCT, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 
                                                     2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) AS ChiTieu
-                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR 
-                         A IN (`$1`, `$1`, `$1`)) AS pvt
+                           FROM         (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_XuatBanCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt
 WHERE     (TG <> 0) OR
                          (DT <> 0) OR
                          (GV <> 0))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view L_Xe_XuatBanLe on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
+[2024-07-12 17:22:21] local.ERROR: Error creating view L_Xe_XuatBanLe on retry: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_db.a_bh_xe_xuatbanch' doesn't exist (SQL: CREATE VIEW `L_Xe_XuatBanLe` AS SELECT        XeBanLe.ID, XeBanLe.SoCT, XeBanLe.NgayCT, XeBanLe.NgayBan, XeBanLe.XeID, A_BH_Xe_XuatBanCH.SoKhung, A_BH_Xe_XuatBanCH.SoMay
 FROM            XeBanLe LEFT OUTER JOIN
                          A_BH_Xe_XuatBanCH ON XeBanLe.ID = A_BH_Xe_XuatBanCH.ID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view A_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
+[2024-07-12 17:22:21] local.ERROR: Error creating view A_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AS pvt' at line 4 (SQL: CREATE VIEW `A_BH_Xe_NhapTraCH` AS SELECT *
 FROM   (SELECT ID, SoCT, NgayCT, XeBanLeID, NgayBan, KhoHangXuatID, KhachHangID, XeNhapMuaID, TuVanID, NVTinhThuong, XeID, HinhThucBan, SoKhung, SoMay, ThanhTien, SUBSTRING(ChiTieu, 1, 2) AS A, NghiepVu, SUBSTRING(ChiTieu, 3, LEN(ChiTieu)) 
                            AS ChiTieu
-             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X PIVOT (Sum(ThanhTien) FOR A IN (`$1`, `$1`, `$1`)) AS pvt)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view vTemp_TestGiaVon on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
+             FROM    (SELECT *, 'DTXe' AS `ChiTieu`, `DTXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTXe` <> 0 UNION ALL SELECT *, 'DTBB' AS `ChiTieu`, `DTBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `DTBB` <> 0 UNION ALL SELECT *, 'GVXe' AS `ChiTieu`, `GVXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVXe` <> 0 UNION ALL SELECT *, 'GVBB' AS `ChiTieu`, `GVBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `GVBB` <> 0 UNION ALL SELECT *, 'TGXe' AS `ChiTieu`, `TGXe` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGXe` <> 0 UNION ALL SELECT *, 'TGBB' AS `ChiTieu`, `TGBB` AS `ThanhTien` FROM `B_BH_Xe_NhapTraCH` WHERE `TGBB` <> 0)  AS unpvt) AS X  AS pvt)  
+[2024-07-12 17:22:21] local.ERROR: Error creating view vTemp_TestGiaVon on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.Gia...' at line 5 (SQL: CREATE VIEW `vTemp_TestGiaVon` AS SELECT        DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID INNER JOIN
@@ -215,7 +305,7 @@ FROM            DVBanLe INNER JOIN
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102))
 GROUP BY DVBanLeVatTu.VatTuID, DVBanLeVatTu.GiaVon, DVBanLeVatTu.TienVon, DVBanLe.KhoHangXuatID, VatTu.MaVatTu, VatTu.TenVatTu_TiengViet
 HAVING        (DVBanLeVatTu.TienVon < 0) AND (DVBanLe.KhoHangXuatID = 1))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
+[2024-07-12 17:22:21] local.ERROR: Error creating view B_BH_Xe_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_XuatBanCH` AS SELECT   L.ID, L.SoCT, L.NgayCT, L.NgayBan, L.KhoHangXuatID, L.KhachHangID, L.XeNhapMuaID, L.HinhThucBan, L.TuVanID, L.TuVanID AS NVTinhThuong, M.XeID, M.SoKhung, M.SoMay, 
                          'XuatBanCH' AS NghiepVu, CAST(L.DonGia + L.GiaThayVanh + IFNULL(TG.TienHangXeTG, 0 AS SIGNED)) AS DTXe, CAST(L.PhiBaoBien + IFNULL(TG.TienHangBaoBienTG, 0 AS SIGNED) 
                          - L.BHXMThu) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(IFNULL(GVBB.SoTien, 0 AS SIGNED)) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM         XeBanLe AS L INNER JOIN
@@ -224,19 +314,19 @@ FROM         XeBanLe AS L INNER JOIN
                          B_BaoBien_GV AS GVBB ON L.ID = GVBB.XeBanLeID LEFT OUTER JOIN
                          B_XeBanCHGiaTangGiam AS TG ON L.ID = TG.XeBanLeID
 WHERE     (L.NgayBan IS NOT NULL))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view V_ChiTienPowerApp on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
+[2024-07-12 17:22:21] local.ERROR: Error creating view V_ChiTienPowerApp on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DATEADD(day, - 30, NOW()), 105))' at line 6 (SQL: CREATE VIEW `V_ChiTienPowerApp` AS SELECT        C.TenCuaHang, A.ID, A.KhoHangID, A.SoCT, A.NgayCT, A.KhachHangID, A.NguoiNhan, A.ChiTienLyDoID, A.TaiKhoanID, A.SoTien, A.GhiChu, A.ChuKy_NguoiNhan, A.Status1, A.Approval1By, A.Approval1At, A.Status2, 
                          A.Approval2By, A.Approval2At, A.CreatedBy, A.CreatedAt, A.UpdatedBy, A.UpdatedAt, A.DeletedBy, A.DeletedAt
 FROM            ChiTien AS A INNER JOIN
                          KhoHang AS K ON A.KhoHangID = K.ID INNER JOIN
                          CuaHang AS C ON K.CuaHangID = C.ID
 WHERE        (A.NgayCT >= CONVERT(date, DATEADD(day, - 30, NOW()), 105)))  
-[2024-07-12 16:34:47] local.ERROR: Error creating view View_1 on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
+[2024-07-12 17:22:21] local.ERROR: Error creating view View_1 on retry: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanL...' at line 4 (SQL: CREATE VIEW `View_1` AS SELECT        DVBanLeVatTu.VatTuID
 FROM            DVBanLe INNER JOIN
                          DVBanLeVatTu ON DVBanLe.ID = DVBanLeVatTu.DVBanLeID
 WHERE        (DVBanLe.NgayCT >= CONVERT(DATETIME, '2019-12-19 00:00:00', 102)) AND (DVBanLeVatTu.TienVon <= 0)
 GROUP BY DVBanLeVatTu.VatTuID)  
-[2024-07-12 16:34:47] local.ERROR: Error creating view B_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
+[2024-07-12 17:22:21] local.ERROR: Error creating view B_BH_Xe_NhapTraCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1583 Incorrect parameters in the call to native function 'IFNULL' (SQL: CREATE VIEW `B_BH_Xe_NhapTraCH` AS SELECT TL.ID, TL.SoCT, TL.NgayCT, TL.XeBanLeID, BL.NgayBan, BL.KhoHangXuatID, BL.KhachHangID, BL.XeNhapMuaID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, M.XeID, BL.HinhThucBan, M.SoKhung, M.SoMay, 'NhapTraCH' AS NghiepVu, CAST(TL.ThanhTienXe - IFNULL(BL.TienVonSonXe, 0 AS SIGNED)) AS DTXe, CAST(TL.PhiBaoBien - IFNULL(BL.BHXMThu, 0 AS SIGNED)) AS DTBB, CAST(M.DonGia_CoVAT AS SIGNED) AS GVXe, CAST(GVBB.SoTien AS SIGNED) AS GVBB, CAST(TG.TienHangXeTG AS SIGNED) AS TGXe, CAST(TG.TienHangBaoBienTG AS SIGNED) AS TGBB
 FROM   XeNhapTraLaiBanLe AS TL INNER JOIN
              XeBanLe AS BL ON TL.XeBanLeID = BL.ID INNER JOIN
              XeNhapMua AS M ON BL.XeNhapMuaID = M.ID LEFT OUTER JOIN

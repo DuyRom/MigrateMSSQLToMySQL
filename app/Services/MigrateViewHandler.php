@@ -15,6 +15,12 @@ class MigrateViewHandler
 
         foreach ($views as $view) {
             $viewName = $view->TABLE_NAME;
+
+            // if ($viewName === 'B_DV_Phieu_LoaiPhieu') {
+            //     SpecialViewHandler::BDVPhieuLoaiPhieu();
+            //     continue;
+            // }
+
             $viewDefinition = DB::connection('sqlsrv')->select(DB::raw("EXEC sp_helptext '{$viewName}'"));
             $viewDefinitionText = '';
             foreach ($viewDefinition as $line) {

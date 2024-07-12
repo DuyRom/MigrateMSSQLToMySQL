@@ -93,6 +93,41 @@ class ViewHelper
             }
         }
 
+        // Check if the view uses PIVOT
+        if (stripos($viewDefinitionText, 'PIVOT') !== false) {
+            // Extract the part of the query that uses PIVOT
+            preg_match('/PIVOT\s*\((.*?)\s*FOR\s*(.*?)\s*IN\s*\((.*?)\)\s*\)/is', $viewDefinitionText, $matches);
+            if ($matches) {
+                list($fullMatch, $aggregateFunction, $pivotColumn, $columns) = $matches;
+
+                // Remove the PIVOT part from the original query
+                $viewDefinitionText = str_replace($fullMatch, '', $viewDefinitionText);
+
+                // Extract the table name from the original query
+                preg_match('/FROM\s*`?(\w+)`?\s*/i', $viewDefinitionText, $tableMatches);
+                $tableName = $tableMatches[1] ?? 'source_table';
+
+                // Prepare the UNION ALL query to replace PIVOT
+                $columnsArray = array_map('trim', explode(',', $columns));
+                $unionAllQueries = [];
+
+                foreach ($columnsArray as $column) {
+                    $unionAllQueries[] = "SELECT *, '$column' AS `$pivotColumn`, $aggregateFunction AS `$column` FROM `$tableName`";
+                }
+
+                $unionAllQuery = implode(" UNION ALL ", $unionAllQueries);
+
+                // Replace the original subquery with the UNION ALL query
+                $viewDefinitionText = preg_replace('/\(\s*SELECT\s*\*\s*FROM\s*`?' . preg_quote($tableName, '/') . '`?\s*\)\s*p/i', "($unionAllQuery)", $viewDefinitionText);
+            }
+        }
+
+        // // Remove alias from subquery
+        // $viewDefinitionText = preg_replace('/\)\s*AS\s*\w+/i', ')', $viewDefinitionText);
+
+        // // Remove alias from subquery
+        // $viewDefinitionText = preg_replace('/\)\s*\w+/i', ')', $viewDefinitionText);
+
         return $viewDefinitionText;
     }
     
