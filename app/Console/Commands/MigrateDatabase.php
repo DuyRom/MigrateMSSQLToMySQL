@@ -36,8 +36,8 @@ class MigrateDatabase extends Command
 
     public function handle()
     {
-        MigrateTableHandler::migrateTables();
-        //MigrateViewHandler::migrateViews();
+        //MigrateTableHandler::migrateTables();
+        MigrateViewHandler::migrateViews();
         //$this->migrateStoredProcedures();
 
         $this->info('Database migration completed successfully.');

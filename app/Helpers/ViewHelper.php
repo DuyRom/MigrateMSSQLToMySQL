@@ -137,7 +137,7 @@ class ViewHelper
         }
     }
 
-    private static function retryFailViews($failedViews)
+    public static function retryFailViews($failedViews)
     {
         $maxRetries = 3; 
         $retryCount = 0;
@@ -163,12 +163,14 @@ class ViewHelper
                         $remainingFailedViews[] = $failedView;
 
                         // Log error to migration_errors table
-                        DB::connection('mysql')->table('migration_errors')->insert([
-                            'table_name' => $failedView['viewName'],
-                            'error_message' => $e->getMessage(),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
+                        DB::connection('mysql')->table('migration_errors')->updateOrInsert(
+                            ['table_name' => $failedView['viewName']],
+                            [
+                                'error_message' => $e->getMessage(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
                     }
                 } else {
                     dump("View {$failedView['viewName']} already exists in MySQL. Skipping creation.");
@@ -181,5 +183,6 @@ class ViewHelper
         if (!empty($failedViews)) {
             dump("Some views could not be created after {$maxRetries} attempts. Check the migration_errors table for details.");
         }
+        
     }
 }
