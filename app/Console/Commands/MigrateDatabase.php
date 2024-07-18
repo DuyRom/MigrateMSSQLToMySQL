@@ -38,8 +38,6 @@ class MigrateDatabase extends Command
     {
         //MigrateTableHandler::migrateTables();
         MigrateViewHandler::migrateViews();
-        //$this->migrateStoredProcedures();
-
         $this->info('Database migration completed successfully.');
     }
 
