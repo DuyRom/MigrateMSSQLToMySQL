@@ -3,15 +3,16 @@ namespace App\databases\views;
 
 use Illuminate\Support\Facades\DB;
 use App\Helpers\ViewHelper;
+use App\Helpers\DataHelper;
 
 class B_DV_Phieu_LoaiPhieu
 {
     public static function create()
     {
         $viewName = 'B_DV_Phieu_LoaiPhieu';
+        $viewDefinitionText = '';
 
         try {
-
             $exists = DB::connection('mysql')->select("SHOW FULL TABLES IN `" . env('DB_DATABASE') . "` WHERE TABLE_TYPE LIKE 'VIEW' AND Tables_in_" . env('DB_DATABASE') . " = ?", [$viewName]);
 
             if (empty($exists)) {
@@ -48,12 +49,18 @@ class B_DV_Phieu_LoaiPhieu
                 $convertedQuery = ViewHelper::viewDefinitionTextHandle($viewDefinitionText);
                 DB::connection('mysql')->statement("CREATE VIEW `$viewName` AS $convertedQuery");
                 dump("View $viewName created successfully in MySQL.");
+                DataHelper::migrateStatus($viewName, 0);
             } else {
                 dump("View $viewName already exists in MySQL.");
             }
         } catch (\Exception $e) {
-            dump($e->getMessage());
             dump("Error occurred while creating view $viewName.");
+            DataHelper::migrateErrors(['viewName' => $viewName, 'viewDefinition' => $viewDefinitionText], $e);
         }
+
+        return [
+            'viewName' => $viewName,
+            'viewDefinitionText' => $viewDefinitionText
+        ];
     }
 }

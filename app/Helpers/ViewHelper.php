@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\DataHelper;
 
 class ViewHelper
 {
@@ -148,8 +149,9 @@ class ViewHelper
                     $exists = DB::connection('mysql')->select("SHOW FULL TABLES IN `" . env('DB_DATABASE') . "` WHERE TABLE_TYPE LIKE 'VIEW' AND Tables_in_" . env('DB_DATABASE') . " = ?", [$viewName]);
 
                     if (empty($exists)) {
-                        DB::connection('mysql')->statement($viewDefinitionText);
+                        DB::connection('mysql')->statement("CREATE VIEW `$viewName` AS $viewDefinitionText");
                         dump("View $viewName created successfully in MySQL.");
+                        DataHelper::migrateStatus($viewName, 0);
                     } else {
                         dump("View $viewName already exists in MySQL.");
                     }
@@ -159,65 +161,69 @@ class ViewHelper
                         'viewName' => $viewName,
                         'viewDefinition' => $viewDefinitionText
                     ];
-                    
+                    DataHelper::migrateErrors(['viewName' => $viewName, 'viewDefinition' => $viewDefinitionText], $e);
                     continue;
                 }
             }
         }
 
         if (!empty($failedViews)) {
-            self::retryFailViews($failedViews);
+            dump('Some views failed to be created. Check migration_errors table for details.');
         } else {
             dump('All custom views created successfully in MySQL.');
         }
     }
 
-    public static function retryFailViews($failedViews)
+    public static function retryFailViews()
     {
         $maxRetries = 3; 
         $retryCount = 0;
+        $migrationErrorsTable = 'migration_errors';
 
-        while (!empty($failedViews) && $retryCount < $maxRetries) {
+        while ($retryCount < $maxRetries) {
             $retryCount++;
             dump("Retrying failed views, attempt {$retryCount} of {$maxRetries}...");
-            $remainingFailedViews = [];
+
+            $failedViews = DB::connection('mysql')->table($migrationErrorsTable)->get();
+
+            if ($failedViews->isEmpty()) {
+                dump("No failed views to retry.");
+                break; 
+            }
 
             foreach ($failedViews as $failedView) {
-                // Check if the view already exists in MySQL
-                $viewExists = DB::connection('mysql')->select("SHOW FULL TABLES WHERE TABLE_TYPE LIKE 'VIEW' AND Tables_in_" . config('database.connections.mysql.database') . " = '{$failedView['viewName']}'");
+                $viewExists = DB::connection('mysql')->select("SHOW FULL TABLES WHERE TABLE_TYPE LIKE 'VIEW' AND Tables_in_" . config('database.connections.mysql.database') . " = '{$failedView->table_name}'");
 
                 if (empty($viewExists)) {
                     try {
-                        DB::connection('mysql')->statement("CREATE VIEW `{$failedView['viewName']}` AS {$failedView['viewDefinition']}");
-                        dump("View {$failedView['viewName']} created successfully in MySQL on retry.");
+                        DB::connection('mysql')->statement("CREATE VIEW `{$failedView->table_name}` AS {$failedView->view_definition}");
+                        dump("View {$failedView->table_name} created successfully in MySQL on retry.");
+
+                        DB::connection('mysql')->table($migrationErrorsTable)->where('table_name', $failedView->table_name)->delete();
                     } catch (\Exception $e) {
-                        \Log::error("Error creating view {$failedView['viewName']} on retry: " . $e->getMessage());
-                        dump("Error creating view {$failedView['viewName']} on retry. Check log for details.");
+                        \Log::error("Error creating view {$failedView->table_name} on retry: " . $e->getMessage());
+                        dump("Error creating view {$failedView->table_name} on retry. Check log for details.");
 
-                        // Add to remaining failed views for the next retry
-                        $remainingFailedViews[] = $failedView;
-
-                        // Log error to migration_errors table
-                        DB::connection('mysql')->table('migration_errors')->updateOrInsert(
-                            ['table_name' => $failedView['viewName']],
+                
+                        DB::connection('mysql')->table($migrationErrorsTable)->updateOrInsert(
+                            ['table_name' => $failedView->table_name],
                             [
                                 'error_message' => $e->getMessage(),
-                                'created_at' => now(),
+                                'view_definition' => $failedView->view_definition,
                                 'updated_at' => now(),
                             ]
                         );
                     }
                 } else {
-                    dump("View {$failedView['viewName']} already exists in MySQL. Skipping creation.");
+                    dump("View {$failedView->table_name} already exists in MySQL. Skipping creation.");
+                    DB::connection('mysql')->table($migrationErrorsTable)->where('table_name', $failedView->table_name)->delete();
                 }
             }
-
-            $failedViews = $remainingFailedViews;
         }
 
-        if (!empty($failedViews)) {
+        $remainingFailedViews = DB::connection('mysql')->table($migrationErrorsTable)->get();
+        if (!$remainingFailedViews->isEmpty()) {
             dump("Some views could not be created after {$maxRetries} attempts. Check the migration_errors table for details.");
         }
-        
     }
 }

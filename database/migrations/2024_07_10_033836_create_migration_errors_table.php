@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('table_name');
             $table->longText('error_message');
+            $table->longText('view_definition');
             $table->timestamps();
         });
     }

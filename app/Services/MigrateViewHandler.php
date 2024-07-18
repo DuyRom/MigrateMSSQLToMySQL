@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\DataHelper;
 use Illuminate\Support\Facades\DB;
 use App\Services\SpecialViewHandler;
 use App\Helpers\ViewHelper;
@@ -15,12 +16,6 @@ class MigrateViewHandler
 
         foreach ($views as $view) {
             $viewName = $view->TABLE_NAME;
-
-            // if ($viewName === 'B_DV_Phieu_LoaiPhieu') {
-            //     SpecialViewHandler::BDVPhieuLoaiPhieu();
-            //     continue;
-            // }
-
             $viewDefinition = DB::connection('sqlsrv')->select(DB::raw("EXEC sp_helptext '{$viewName}'"));
             $viewDefinitionText = '';
             foreach ($viewDefinition as $line) {
@@ -29,14 +24,9 @@ class MigrateViewHandler
 
             $viewDefinitionText =  ViewHelper::viewDefinitionTextHandle($viewDefinitionText);
 
-             // Handle special views
-             $viewDefinitionText = SpecialViewHandler::handleSpecialView($viewName, $viewDefinitionText);
-
-             // Ensure no CREATE VIEW statements remain
              $pattern = '/CREATE\s+VIEW\s+\w+\s+AS\s+/i';
              $viewDefinitionText = preg_replace($pattern, '', $viewDefinitionText);  
 
-            // Check if the view already exists in MySQL
             $viewExists = DB::connection('mysql')->select("SHOW FULL TABLES WHERE TABLE_TYPE LIKE 'VIEW' AND Tables_in_" . config('database.connections.mysql.database') . " = '{$viewName}'");
 
             if (empty($viewExists)) {
@@ -45,7 +35,9 @@ class MigrateViewHandler
                     DB::connection('mysql')->table('migration_errors')->where('table_name', $viewName)->delete();
                     dump("View {$viewName} created successfully in MySQL.");
                 } catch (\Exception $e) {
-                    \Log::error("Error creating view {$viewName}: " . $e->getMessage());
+                    if (SpecialViewHandler::create($viewName)) {
+                        continue;
+                    }
                     dump("Error creating view {$viewName}. Check log for details.");
                     $failedViews[] = [
                         'viewName' => $viewName,
@@ -53,6 +45,7 @@ class MigrateViewHandler
                         'error' => $e->getMessage()
                     ];
 
+                    DataHelper::migrateErrors(['viewName' => $viewName, 'viewDefinition' => $viewDefinitionText], $e);
                     file_put_contents(storage_path("logs/{$viewName}.sql"), $viewDefinitionText);
                 }
             } else {
@@ -60,8 +53,7 @@ class MigrateViewHandler
             }
         }
 
-        //ViewHelper::createCustomView();
-        ViewHelper::retryFailViews($failedViews);
+        ViewHelper::retryFailViews();
     }
 
 }
