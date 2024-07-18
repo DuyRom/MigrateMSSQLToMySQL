@@ -123,12 +123,6 @@ class ViewHelper
             }
         }
 
-        // // Remove alias from subquery
-        // $viewDefinitionText = preg_replace('/\)\s*AS\s*\w+/i', ')', $viewDefinitionText);
-
-        // // Remove alias from subquery
-        // $viewDefinitionText = preg_replace('/\)\s*\w+/i', ')', $viewDefinitionText);
-
         return $viewDefinitionText;
     }
     

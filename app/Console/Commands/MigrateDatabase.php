@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\MigrateViewHandler;
 use App\Services\MigrateTableHandler;
-
+use App\Services\MigrateProcedureHandler;
 
 class MigrateDatabase extends Command
 {
@@ -37,7 +37,8 @@ class MigrateDatabase extends Command
     public function handle()
     {
         //MigrateTableHandler::migrateTables();
-        MigrateViewHandler::migrateViews();
+        //MigrateViewHandler::migrateViews();
+        MigrateProcedureHandler::create();
         $this->info('Database migration completed successfully.');
     }
 
