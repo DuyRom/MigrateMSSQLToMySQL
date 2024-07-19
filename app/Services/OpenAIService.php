@@ -18,6 +18,13 @@ class OpenAIService
         $this->model = config('services.openai.model');
     }
 
+    /**
+     * Converts an MSSQL stored procedure definition to MySQL syntax using the OpenAI API.
+     *
+     * @param string $procedureDefinition The definition of the MSSQL stored procedure.
+     * @return string The converted MySQL syntax as a single SQL string suitable for use with $pdo->exec().
+     * @throws \Exception If there is an error with the OpenAI API or network.
+     */
     public function convertProcedure($procedureDefinition)
     {
         $prompt = "Convert the following MSSQL stored procedure to MySQL. Only return the SQL syntax without any explanations or comments. Ensure the output is a single SQL string suitable for use with \$pdo->exec():\n\n" . $procedureDefinition;
@@ -40,11 +47,9 @@ class OpenAIService
 
             $convertedProcedure = $data['choices'][0]['message']['content'] ?? 'No response';
 
-            // Loại bỏ các lệnh DELIMITER và các ký tự phân cách khác như // và $
             $convertedProcedure = preg_replace('/DELIMITER\s+\S+\s*/', '', $convertedProcedure);
             $convertedProcedure = str_replace(['//', '$'], '', $convertedProcedure);
 
-            // Loại bỏ tiền tố dbo khỏi tên bảng
             $convertedProcedure = preg_replace('/\bdbo\./i', '', $convertedProcedure);
 
             return $convertedProcedure;

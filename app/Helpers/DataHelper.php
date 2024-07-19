@@ -6,6 +6,13 @@ use Illuminate\Support\Facades\DB;
 
 class DataHelper
 {
+    /**
+     * Update or insert migration status for a given table.
+     *
+     * @param string $tableName The name of the table.
+     * @param int $totalMigrated The total number of records migrated.
+     * @return void
+     */
     public static function migrateStatus($tableName, $totalMigrated)
     {
         DB::connection('mysql')->table('migration_status')->updateOrInsert(
@@ -18,6 +25,13 @@ class DataHelper
         );
     }
 
+    /**
+     * Migrates errors to the migration_errors table in the MySQL database.
+     *
+     * @param array $failedView The failed view details.
+     * @param Exception $e The exception object containing the error message.
+     * @return void
+     */
     public static function migrateErrors($failedView, $e)
     {
         DB::connection('mysql')->table('migration_errors')->updateOrInsert(

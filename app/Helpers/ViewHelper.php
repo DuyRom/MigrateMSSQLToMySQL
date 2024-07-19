@@ -126,6 +126,15 @@ class ViewHelper
         return $viewDefinitionText;
     }
     
+    /**
+     * Creates custom views in MySQL based on PHP files in the views directory.
+     *
+     * This method iterates through all PHP files in the views directory and creates corresponding views in MySQL.
+     * It requires the PHP files to have a class with a static method `create()` that returns an array containing
+     * the view name and the view definition text.
+     *
+     * @return void
+     */
     public static function createCustomView()
     {
         $viewFiles = glob(database_path('views/*.php'));
@@ -168,6 +177,17 @@ class ViewHelper
         }
     }
 
+    /**
+     * Retry failed views.
+     *
+     * This method attempts to create views in MySQL that previously failed during migration.
+     * It retrieves the failed views from the 'migration_errors' table and tries to create them again.
+     * If a view creation fails, it logs the error and updates the 'migration_errors' table with the error details.
+     * The method retries a maximum of 3 times before giving up on each failed view.
+     * After the retries, it checks if there are any remaining failed views and displays a message if there are.
+     *
+     * @return void
+     */
     public static function retryFailViews()
     {
         $maxRetries = 3; 

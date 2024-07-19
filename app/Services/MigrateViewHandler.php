@@ -9,6 +9,19 @@ use App\Helpers\ViewHelper;
 
 class MigrateViewHandler
 {
+    /**
+     * Migrates views from SQL Server to MySQL.
+     *
+     * This method retrieves the list of views from the SQL Server database using the INFORMATION_SCHEMA.VIEWS table.
+     * It then iterates over each view, retrieves its definition using the sp_helptext stored procedure,
+     * and performs necessary modifications to the view definition text.
+     * If the view does not exist in the MySQL database, it creates the view using the modified view definition text.
+     * If an error occurs during the view creation, it logs the error and saves the view definition text to a file.
+     * If the view already exists in the MySQL database, it skips the creation process.
+     * Finally, it retries any failed views using the ViewHelper::retryFailViews() method.
+     *
+     * @return void
+     */
     public static function migrateViews()
     {
         $views = DB::connection('sqlsrv')->select('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS');
