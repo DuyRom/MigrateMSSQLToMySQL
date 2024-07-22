@@ -1,0 +1,164 @@
+[2024-07-22 13:48:47] local.ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_motor_db.migration_errors' doesn't exist (SQL: insert into `migration_errors` (`table_name`, `error_message`, `created_at`, `updated_at`) values (XeBangGiaNhapMuaLog, SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_motor_db.migration_status' doesn't exist (SQL: select exists(select * from `migration_status` where (`table_name` = XeBangGiaNhapMuaLog)) as `exists`), 2024-07-22 13:48:46, 2024-07-22 13:48:46)) {"exception":"[object] (Illuminate\\Database\\QueryException(code: 42S02): SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_motor_db.migration_errors' doesn't exist (SQL: insert into `migration_errors` (`table_name`, `error_message`, `created_at`, `updated_at`) values (XeBangGiaNhapMuaLog, SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_motor_db.migration_status' doesn't exist (SQL: select exists(select * from `migration_status` where (`table_name` = XeBangGiaNhapMuaLog)) as `exists`), 2024-07-22 13:48:46, 2024-07-22 13:48:46)) at C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:760)
+[stacktrace]
+#0 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(720): Illuminate\\Database\\Connection->runQueryCallback('insert into `mi...', Array, Object(Closure))
+#1 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(546): Illuminate\\Database\\Connection->run('insert into `mi...', Array, Object(Closure))
+#2 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(498): Illuminate\\Database\\Connection->statement('insert into `mi...', Array)
+#3 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(3274): Illuminate\\Database\\Connection->insert('insert into `mi...', Array)
+#4 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\app\\Services\\MigrateTableHandler.php(151): Illuminate\\Database\\Query\\Builder->insert(Array)
+#5 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\app\\Console\\Commands\\MigrateDatabase.php(39): App\\Services\\MigrateTableHandler::migrateTables()
+#6 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): App\\Console\\Commands\\MigrateDatabase->handle()
+#7 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(41): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#8 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(93): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#9 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(37): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#10 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(661): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#11 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(183): Illuminate\\Container\\Container->call(Array)
+#12 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Command\\Command.php(291): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#13 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(153): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#14 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Application.php(1014): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#15 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Application.php(301): Symfony\\Component\\Console\\Application->doRunCommand(Object(App\\Console\\Commands\\MigrateDatabase), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#16 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Application.php(171): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#17 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Application.php(102): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\artisan(37): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#20 {main}
+
+[previous exception] [object] (PDOException(code: 42S02): SQLSTATE[42S02]: Base table or view not found: 1146 Table 'quoctien_motor_db.migration_errors' doesn't exist at C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:539)
+[stacktrace]
+#0 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(539): PDO->prepare('insert into `mi...')
+#1 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(753): Illuminate\\Database\\Connection->Illuminate\\Database\\{closure}('insert into `mi...', Array)
+#2 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(720): Illuminate\\Database\\Connection->runQueryCallback('insert into `mi...', Array, Object(Closure))
+#3 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(546): Illuminate\\Database\\Connection->run('insert into `mi...', Array, Object(Closure))
+#4 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php(498): Illuminate\\Database\\Connection->statement('insert into `mi...', Array)
+#5 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php(3274): Illuminate\\Database\\Connection->insert('insert into `mi...', Array)
+#6 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\app\\Services\\MigrateTableHandler.php(151): Illuminate\\Database\\Query\\Builder->insert(Array)
+#7 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\app\\Console\\Commands\\MigrateDatabase.php(39): App\\Services\\MigrateTableHandler::migrateTables()
+#8 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): App\\Console\\Commands\\MigrateDatabase->handle()
+#9 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(41): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#10 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(93): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#11 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(37): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#12 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(661): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#13 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(183): Illuminate\\Container\\Container->call(Array)
+#14 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Command\\Command.php(291): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#15 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(153): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#16 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Application.php(1014): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#17 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Application.php(301): Symfony\\Component\\Console\\Application->doRunCommand(Object(App\\Console\\Commands\\MigrateDatabase), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\symfony\\console\\Application.php(171): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Application.php(102): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#20 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#21 C:\\xampp\\htdocs\\migrate-mssql-to-mysql\\artisan(37): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#22 {main}
+"} 
+[2024-07-22 13:51:49] local.ERROR: Error creating view A_BH_VatTu_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1582 Incorrect parameter count in the call to native function 'isnull' (SQL: CREATE VIEW `A_BH_VatTu_XuatBanCH` AS SELECT        BH.ID, BH.XeBanLeID, BL.SoCT, BL.NgayBan, BH.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, BH.VatTuID, 'XuatBanCH' AS NghiepVu, 'BHiem' AS ChiTieu, 1 AS SL, 0 AS TG, BH.GiaBanBH AS DT, BH.GiaVonBH AS GV, 
+                         BL.XeID, BL.TuVanID, CASE WHEN BH.TuVanID IS NOT NULL THEN BH.TuVanID ELSE BL.TuVanID END AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeBaoHiem AS BH ON BL.ID = BH.XeBanLeID LEFT OUTER JOIN
+                         XeNhapTraLaiBanLe AS TL ON BL.ID = TL.XeBanLeID
+WHERE        (TL.ID IS NULL) AND (BL.NgayBan IS NOT NULL)
+UNION ALL
+SELECT        PK.ID, PK.XeBanLeID, BL.SoCT, BL.NgayBan, PK.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, PK.VatTuID, 'XuatBanCH' AS NghiepVu, L.ChiTieu, PK.SoLuong AS SL, PK.DonGiaTG * PK.SoLuong AS TG, PK.ThanhTien AS DT, 
+                         PK.TienVon AS GV, BL.XeID, isnull(PK.TuVanID, BL.TuVanID) AS TuVanID, isnull(PK.TuVanID, BL.TuVanID) AS NVTinhThuong, PK.NguoiThucHien AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLePhuKien AS PK ON BL.ID = PK.XeBanLeID INNER JOIN
+                         VatTu AS V ON PK.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (PK.SoLuong <> 0) AND (PK.NgayXuat IS NOT NULL)
+UNION ALL
+SELECT        KM.ID, KM.XeBanLeID, BL.SoCT, BL.NgayBan, KM.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, KM.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         KM.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * Km.SoLuong ELSE 0 END AS DT, V.GiaNhap * Km.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeKhuyenMai AS KM ON BL.ID = KM.XeBanLeID INNER JOIN
+                         VatTu AS V ON KM.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (KM.SoLuong <> 0)
+UNION ALL
+SELECT        KM.ID, KM.XeBanSiID, BS.SoCT, BS.NgayCT, KM.NgayXuat, BS.KhoHangXuatID, BS.KhachHangID, KM.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         KM.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * Km.SoLuong ELSE 0 END AS DT, V.GiaNhap * Km.SoLuong AS GV, NULL AS XeID, NULL AS TuVanID, NULL AS NVTinhThuong, NULL AS KTV
+FROM            XeBanSi AS BS INNER JOIN
+                         XeBanSiKhuyenMai AS KM ON BS.ID = KM.XeBanSiID INNER JOIN
+                         VatTu AS V ON KM.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (KM.SoLuong <> 0)
+UNION ALL
+SELECT        VC.ID, VC.XeBanLeID, BL.SoCT, BL.NgayBan, VC.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, VC.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         VC.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * VC.SoLuong ELSE 0 END AS DT, V.GiaNhap * VC.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeVoucher AS VC ON BL.ID = VC.XeBanLeID INNER JOIN
+                         VatTu AS V ON VC.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (VC.SoLuong <> 0))  
+[2024-07-22 13:51:49] local.ERROR: Error creating view A_BH_VatTu_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1582 Incorrect parameter count in the call to native function 'isnull' (SQL: CREATE VIEW `A_BH_VatTu_XuatBanCH` AS SELECT        BH.ID, BH.XeBanLeID, BL.SoCT, BL.NgayBan, BH.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, BH.VatTuID, 'XuatBanCH' AS NghiepVu, 'BHiem' AS ChiTieu, 1 AS SL, 0 AS TG, BH.GiaBanBH AS DT, BH.GiaVonBH AS GV, 
+                         BL.XeID, BL.TuVanID, CASE WHEN BH.TuVanID IS NOT NULL THEN BH.TuVanID ELSE BL.TuVanID END AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeBaoHiem AS BH ON BL.ID = BH.XeBanLeID LEFT OUTER JOIN
+                         XeNhapTraLaiBanLe AS TL ON BL.ID = TL.XeBanLeID
+WHERE        (TL.ID IS NULL) AND (BL.NgayBan IS NOT NULL)
+UNION ALL
+SELECT        PK.ID, PK.XeBanLeID, BL.SoCT, BL.NgayBan, PK.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, PK.VatTuID, 'XuatBanCH' AS NghiepVu, L.ChiTieu, PK.SoLuong AS SL, PK.DonGiaTG * PK.SoLuong AS TG, PK.ThanhTien AS DT, 
+                         PK.TienVon AS GV, BL.XeID, isnull(PK.TuVanID, BL.TuVanID) AS TuVanID, isnull(PK.TuVanID, BL.TuVanID) AS NVTinhThuong, PK.NguoiThucHien AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLePhuKien AS PK ON BL.ID = PK.XeBanLeID INNER JOIN
+                         VatTu AS V ON PK.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (PK.SoLuong <> 0) AND (PK.NgayXuat IS NOT NULL)
+UNION ALL
+SELECT        KM.ID, KM.XeBanLeID, BL.SoCT, BL.NgayBan, KM.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, KM.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         KM.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * Km.SoLuong ELSE 0 END AS DT, V.GiaNhap * Km.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeKhuyenMai AS KM ON BL.ID = KM.XeBanLeID INNER JOIN
+                         VatTu AS V ON KM.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (KM.SoLuong <> 0)
+UNION ALL
+SELECT        KM.ID, KM.XeBanSiID, BS.SoCT, BS.NgayCT, KM.NgayXuat, BS.KhoHangXuatID, BS.KhachHangID, KM.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         KM.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * Km.SoLuong ELSE 0 END AS DT, V.GiaNhap * Km.SoLuong AS GV, NULL AS XeID, NULL AS TuVanID, NULL AS NVTinhThuong, NULL AS KTV
+FROM            XeBanSi AS BS INNER JOIN
+                         XeBanSiKhuyenMai AS KM ON BS.ID = KM.XeBanSiID INNER JOIN
+                         VatTu AS V ON KM.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (KM.SoLuong <> 0)
+UNION ALL
+SELECT        VC.ID, VC.XeBanLeID, BL.SoCT, BL.NgayBan, VC.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, VC.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         VC.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * VC.SoLuong ELSE 0 END AS DT, V.GiaNhap * VC.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeVoucher AS VC ON BL.ID = VC.XeBanLeID INNER JOIN
+                         VatTu AS V ON VC.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (VC.SoLuong <> 0))  
+[2024-07-22 13:51:49] local.ERROR: Error creating view A_BH_VatTu_XuatBanCH on retry: SQLSTATE[42000]: Syntax error or access violation: 1582 Incorrect parameter count in the call to native function 'isnull' (SQL: CREATE VIEW `A_BH_VatTu_XuatBanCH` AS SELECT        BH.ID, BH.XeBanLeID, BL.SoCT, BL.NgayBan, BH.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, BH.VatTuID, 'XuatBanCH' AS NghiepVu, 'BHiem' AS ChiTieu, 1 AS SL, 0 AS TG, BH.GiaBanBH AS DT, BH.GiaVonBH AS GV, 
+                         BL.XeID, BL.TuVanID, CASE WHEN BH.TuVanID IS NOT NULL THEN BH.TuVanID ELSE BL.TuVanID END AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeBaoHiem AS BH ON BL.ID = BH.XeBanLeID LEFT OUTER JOIN
+                         XeNhapTraLaiBanLe AS TL ON BL.ID = TL.XeBanLeID
+WHERE        (TL.ID IS NULL) AND (BL.NgayBan IS NOT NULL)
+UNION ALL
+SELECT        PK.ID, PK.XeBanLeID, BL.SoCT, BL.NgayBan, PK.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, PK.VatTuID, 'XuatBanCH' AS NghiepVu, L.ChiTieu, PK.SoLuong AS SL, PK.DonGiaTG * PK.SoLuong AS TG, PK.ThanhTien AS DT, 
+                         PK.TienVon AS GV, BL.XeID, isnull(PK.TuVanID, BL.TuVanID) AS TuVanID, isnull(PK.TuVanID, BL.TuVanID) AS NVTinhThuong, PK.NguoiThucHien AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLePhuKien AS PK ON BL.ID = PK.XeBanLeID INNER JOIN
+                         VatTu AS V ON PK.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (PK.SoLuong <> 0) AND (PK.NgayXuat IS NOT NULL)
+UNION ALL
+SELECT        KM.ID, KM.XeBanLeID, BL.SoCT, BL.NgayBan, KM.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, KM.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         KM.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * Km.SoLuong ELSE 0 END AS DT, V.GiaNhap * Km.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeKhuyenMai AS KM ON BL.ID = KM.XeBanLeID INNER JOIN
+                         VatTu AS V ON KM.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (KM.SoLuong <> 0)
+UNION ALL
+SELECT        KM.ID, KM.XeBanSiID, BS.SoCT, BS.NgayCT, KM.NgayXuat, BS.KhoHangXuatID, BS.KhachHangID, KM.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         KM.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * Km.SoLuong ELSE 0 END AS DT, V.GiaNhap * Km.SoLuong AS GV, NULL AS XeID, NULL AS TuVanID, NULL AS NVTinhThuong, NULL AS KTV
+FROM            XeBanSi AS BS INNER JOIN
+                         XeBanSiKhuyenMai AS KM ON BS.ID = KM.XeBanSiID INNER JOIN
+                         VatTu AS V ON KM.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (KM.SoLuong <> 0)
+UNION ALL
+SELECT        VC.ID, VC.XeBanLeID, BL.SoCT, BL.NgayBan, VC.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, VC.VatTuID, CASE WHEN L.vattunhomid = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                         VC.SoLuong, 0 AS TG, CASE WHEN L.vattunhomid = 13 THEN - V.GiaXuat * VC.SoLuong ELSE 0 END AS DT, V.GiaNhap * VC.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+FROM            XeBanLe AS BL INNER JOIN
+                         XeBanLeVoucher AS VC ON BL.ID = VC.XeBanLeID INNER JOIN
+                         VatTu AS V ON VC.VatTuID = V.ID INNER JOIN
+                         VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+WHERE        (VC.SoLuong <> 0))  

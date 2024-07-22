@@ -71,6 +71,7 @@ class SpecialViewHandler
             'View_1' => 'View1',
             'A_BH_Xe_BangGiaNhapMua' => 'ABHXeBangGiaNhapMua',
             'A_BH_Xe_BangGiaXuatBanCH' => 'ABHXeBangGiaXuatBanCH',
+            'A_BH_VatTu_XuatBanCH' => 'ABHVatTuXuatBanCH',
         ];
 
         if (array_key_exists($viewName, $specialViewHandlers)) {
@@ -504,5 +505,67 @@ class SpecialViewHandler
         ];
     }
 
+    public static function ABHVatTuXuatBanCH()
+    {
+        $viewName = 'A_BH_VatTu_XuatBanCH';
+        $viewDefinitionText = '';
+
+        try {
+            $exists = DB::connection('mysql')->select("SHOW FULL TABLES IN `" . env('DB_DATABASE') . "` WHERE TABLE_TYPE LIKE 'VIEW' AND Tables_in_" . env('DB_DATABASE') . " = ?", [$viewName]);
+
+            if (empty($exists)) {
+                $viewDefinitionText = "
+                    SELECT BH.ID, BH.XeBanLeID, BL.SoCT, BL.NgayBan, BH.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, BH.VatTuID, 'XuatBanCH' AS NghiepVu, 'BHiem' AS ChiTieu, 1 AS SL, 0 AS TG, BH.GiaBanBH AS DT, BH.GiaVonBH AS GV, 
+                        BL.XeID, BL.TuVanID, CASE WHEN BH.TuVanID IS NOT NULL THEN BH.TuVanID ELSE BL.TuVanID END AS NVTinhThuong, NULL AS KTV
+                    FROM dbo.XeBanLe AS BL 
+                    INNER JOIN dbo.XeBanLeBaoHiem AS BH ON BL.ID = BH.XeBanLeID 
+                    LEFT OUTER JOIN dbo.XeNhapTraLaiBanLe AS TL ON BL.ID = TL.XeBanLeID
+                    WHERE TL.ID IS NULL AND BL.NgayBan IS NOT NULL
+                    UNION ALL
+                    SELECT PK.ID, PK.XeBanLeID, BL.SoCT, BL.NgayBan, PK.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, PK.VatTuID, 'XuatBanCH' AS NghiepVu, L.ChiTieu, PK.SoLuong AS SL, PK.DonGiaTG * PK.SoLuong AS TG, PK.ThanhTien AS DT, 
+                        PK.TienVon AS GV, BL.XeID, ISNULL(PK.TuVanID, BL.TuVanID) AS TuVanID, ISNULL(PK.TuVanID, BL.TuVanID) AS NVTinhThuong, PK.NguoiThucHien AS KTV
+                    FROM dbo.XeBanLe AS BL 
+                    INNER JOIN dbo.XeBanLePhuKien AS PK ON BL.ID = PK.XeBanLeID 
+                    INNER JOIN dbo.VatTu AS V ON PK.VatTuID = V.ID 
+                    INNER JOIN dbo.VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+                    WHERE PK.SoLuong <> 0 AND PK.NgayXuat IS NOT NULL
+                    UNION ALL
+                    SELECT KM.ID, KM.XeBanLeID, BL.SoCT, BL.NgayBan, KM.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, KM.VatTuID, CASE WHEN L.VatTuNhomID = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                        KM.SoLuong, 0 AS TG, CASE WHEN L.VatTuNhomID = 13 THEN - V.GiaXuat * KM.SoLuong ELSE 0 END AS DT, V.GiaNhap * KM.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+                    FROM dbo.XeBanLe AS BL 
+                    INNER JOIN dbo.XeBanLeKhuyenMai AS KM ON BL.ID = KM.XeBanLeID 
+                    INNER JOIN dbo.VatTu AS V ON KM.VatTuID = V.ID 
+                    INNER JOIN dbo.VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+                    WHERE KM.SoLuong <> 0
+                    UNION ALL
+                    SELECT KM.ID, KM.XeBanSiID, BS.SoCT, BS.NgayCT, KM.NgayXuat, BS.KhoHangXuatID, BS.KhachHangID, KM.VatTuID, CASE WHEN L.VatTuNhomID = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                        KM.SoLuong, 0 AS TG, CASE WHEN L.VatTuNhomID = 13 THEN - V.GiaXuat * KM.SoLuong ELSE 0 END AS DT, V.GiaNhap * KM.SoLuong AS GV, NULL AS XeID, NULL AS TuVanID, NULL AS NVTinhThuong, NULL AS KTV
+                    FROM dbo.XeBanSi AS BS 
+                    INNER JOIN dbo.XeBanSiKhuyenMai AS KM ON BS.ID = KM.XeBanSiID 
+                    INNER JOIN dbo.VatTu AS V ON KM.VatTuID = V.ID 
+                    INNER JOIN dbo.VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+                    WHERE KM.SoLuong <> 0
+                    UNION ALL
+                    SELECT VC.ID, VC.XeBanLeID, BL.SoCT, BL.NgayBan, VC.NgayXuat, BL.KhoHangXuatID, BL.KhachHangID, VC.VatTuID, CASE WHEN L.VatTuNhomID = 13 THEN 'XuatBanKMDT' ELSE 'XuatBanKMVT' END AS NghiepVu, L.ChiTieu, 
+                        VC.SoLuong, 0 AS TG, CASE WHEN L.VatTuNhomID = 13 THEN - V.GiaXuat * VC.SoLuong ELSE 0 END AS DT, V.GiaNhap * VC.SoLuong AS GV, BL.XeID, BL.TuVanID, BL.TuVanID AS NVTinhThuong, NULL AS KTV
+                    FROM dbo.XeBanLe AS BL 
+                    INNER JOIN dbo.XeBanLeVoucher AS VC ON BL.ID = VC.XeBanLeID 
+                    INNER JOIN dbo.VatTu AS V ON VC.VatTuID = V.ID 
+                    INNER JOIN dbo.VatTuLoai AS L ON V.VatTuLoaiID = L.ID
+                    WHERE VC.SoLuong <> 0
+                ";
+
+                $convertedQuery = ViewHelper::viewDefinitionTextHandle($viewDefinitionText);
+                DB::connection('mysql')->statement("CREATE VIEW `$viewName` AS $convertedQuery");
+                dump("View $viewName created successfully in MySQL.");
+                DataHelper::migrateStatus($viewName, 0);
+            } else {
+                dump("View $viewName already exists in MySQL.");
+            }
+        } catch (\Exception $e) {
+            dump("Error occurred while creating view $viewName.");
+            DataHelper::migrateErrors(['viewName' => $viewName, 'viewDefinition' => $viewDefinitionText], $e);
+        }
+    }
 
 }
