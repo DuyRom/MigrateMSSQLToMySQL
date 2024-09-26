@@ -1,1 +1,2 @@
 [2024-09-26 11:55:24] local.ERROR: Error migrating table model_images: A non-numeric value encountered  
+[2024-09-26 14:27:47] local.ERROR: Error migrating chunk for table notifications from ID  to 9999: SQLSTATE[22018]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Operand type clash: uniqueidentifier is incompatible with int (SQL: select top 10000 * from [notifications] where [id] between ? and 9999 order by [id] asc)  

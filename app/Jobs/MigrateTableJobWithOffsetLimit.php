@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -46,19 +45,33 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
         $chunkSize = $this->chunkSize;
 
         try {
-       
-            if (!Schema::connection('sqlsrv')->hasColumn($tableName, 'id')) {
-                dump("Table {$tableName} does not have an 'id' column.");
-                \Log::error("Table {$tableName} does not have an 'id' column.");
-                return;
+            $idColumnExists = Schema::connection('sqlsrv')->hasColumn($tableName, 'id');
+            $idColumnType = null;
+
+            if ($idColumnExists) {
+                $idColumnType = DB::connection('sqlsrv')
+                    ->select("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'", [$tableName]);
+
+                if (!empty($idColumnType)) {
+                    $idColumnType = $idColumnType[0]->DATA_TYPE;
+                }
             }
 
-            $rows = DB::connection('sqlsrv')
-                ->table($tableName)
-                ->whereBetween('id', [$startId, $endId])
-                ->orderBy('id')
-                ->limit($chunkSize)
-                ->get();
+            $rows = collect(); 
+
+            if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
+                $rows = DB::connection('sqlsrv')
+                    ->table($tableName)
+                    ->limit($chunkSize)
+                    ->get();
+            } else {
+                $rows = DB::connection('sqlsrv')
+                    ->table($tableName)
+                    ->whereBetween('id', [$startId, $endId])
+                    ->orderBy('id')
+                    ->limit($chunkSize)
+                    ->get();
+            }
 
             if ($rows->isEmpty()) {
                 return;

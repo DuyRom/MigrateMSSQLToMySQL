@@ -30,18 +30,6 @@ class MigrateTableWithOffsetLimit
                 $columns = DB::connection('sqlsrv')->select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$tableName]);
 
                 if (!Schema::connection('mysql')->hasTable($tableName)) {
-
-                    if (!Schema::connection('sqlsrv')->hasColumn($tableName, 'id')) {
-                        DB::connection('mysql')->table('migration_errors')->insert([
-                            'table_name' => $tableName,
-                            'error_message' => "Table {$tableName} does not have an 'id' column.",
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        continue;
-                    }
-
                     Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
                         foreach ($columns as $column) {
                             $columnName = $column->COLUMN_NAME;
@@ -110,12 +98,28 @@ class MigrateTableWithOffsetLimit
 
                 $chunkSize = 10000;
 
-                $minId = DB::connection('sqlsrv')->table($tableName)->min('id'); 
-                $maxId = DB::connection('sqlsrv')->table($tableName)->max('id'); 
+                $idColumnExists = Schema::connection('sqlsrv')->hasColumn($tableName, 'id');
+                $idColumnType = null;
 
-                for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
-                    $endId = $startId + $chunkSize - 1;
-                    MigrateTableJobWithOffsetLimit::dispatch($tableName, $startId, $endId, $chunkSize);
+                if ($idColumnExists) {
+                    $idColumnType = DB::connection('sqlsrv')
+                        ->select("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'", [$tableName]);
+
+                    if (!empty($idColumnType)) {
+                        $idColumnType = $idColumnType[0]->DATA_TYPE;
+                    }
+                }
+
+                if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
+                    MigrateTableJobWithOffsetLimit::dispatch($tableName, null, null, $chunkSize);
+                } else {
+                    $minId = DB::connection('sqlsrv')->table($tableName)->min('id'); 
+                    $maxId = DB::connection('sqlsrv')->table($tableName)->max('id'); 
+
+                    for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
+                        $endId = $startId + $chunkSize - 1;
+                        MigrateTableJobWithOffsetLimit::dispatch($tableName, $startId, $endId, $chunkSize);
+                    }
                 }
 
                 $successfulMigrations[] = $tableName;
@@ -151,5 +155,4 @@ class MigrateTableWithOffsetLimit
 
         Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
     }
-
 }
