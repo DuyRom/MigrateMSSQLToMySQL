@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Services\MigrateViewHandler;
 use App\Services\MigrateTableHandler;
 use App\Services\MigrateProcedureHandler;
+use App\Services\AddTableConstraintHandler;
+use App\Services\MigrateTableWithOffsetLimit;
 
 class MigrateDatabase extends Command
 {
@@ -14,7 +16,7 @@ class MigrateDatabase extends Command
      *
      * @var string
      */
-    protected $signature = 'migrate:database';
+    protected $signature = 'migrate:databases';
 
     /**
      * The console command description.
@@ -36,8 +38,9 @@ class MigrateDatabase extends Command
 
     public function handle()
     {
-        MigrateTableHandler::migrateTables();
-        MigrateViewHandler::migrateViews();
+        MigrateTableWithOffsetLimit::migrateTables();
+        // AddTableConstraintHandler::addTableConstraints();
+        // MigrateViewHandler::migrateViews();
         // MigrateProcedureHandler::create();
         $this->info('Database migration completed successfully.');
     }

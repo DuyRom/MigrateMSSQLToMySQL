@@ -8,9 +8,9 @@ use App\Mail\MigrationCompleted;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\MigrationErrorNotification;
 use Illuminate\Support\Facades\Notification;
+use App\Jobs\MigrateTableJobWithOffsetLimit;
 
-
-class MigrateTableHandler
+class MigrateTableWithOffsetLimit
 {
     public static function migrateTables($toLower = false)
     {
@@ -30,20 +30,28 @@ class MigrateTableHandler
                 $columns = DB::connection('sqlsrv')->select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$tableName]);
 
                 if (!Schema::connection('mysql')->hasTable($tableName)) {
+
+                    if (!Schema::connection('sqlsrv')->hasColumn($tableName, 'id')) {
+                        DB::connection('mysql')->table('migration_errors')->insert([
+                            'table_name' => $tableName,
+                            'error_message' => "Table {$tableName} does not have an 'id' column.",
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        continue;
+                    }
+
                     Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
                         foreach ($columns as $column) {
                             $columnName = $column->COLUMN_NAME;
                             $dataType = $column->DATA_TYPE;
                             $isNullable = $column->IS_NULLABLE === 'YES';
                             $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
-                
+
                             switch ($dataType) {
                                 case 'int':
-                                    if (strtolower($columnName) === 'id' && config('database.id_auto_increment')) {
-                                        $table->bigIncrements($columnName);
-                                    } else {
-                                        $table->bigInteger($columnName)->nullable($isNullable);
-                                    }
+                                    $table->bigInteger($columnName)->nullable($isNullable);
                                     break;
                                 case 'varchar':
                                 case 'nvarchar':
@@ -86,7 +94,6 @@ class MigrateTableHandler
                                     $table->string($columnName)->nullable($isNullable);
                                     break;
                             }
-                            
                         }
                     });
 
@@ -101,49 +108,18 @@ class MigrateTableHandler
                     continue;
                 }
 
-                $totalMigrated = 0;
-                if (Schema::connection('sqlsrv')->hasColumn($tableName, 'id')) {
-                    DB::connection('sqlsrv')->table($tableName)->orderBy('id')->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
-                        foreach ($rows as $row) {
-                            DB::connection('mysql')->table($tableName)->insert((array) $row);
-                            $totalMigrated++;
-                        }
-                        dump("Chunk of data for table {$tableName} migrated successfully.");
-                    });
-                } else {
-                    $firstColumn = Schema::connection('sqlsrv')->getColumnListing($tableName)[0];
-    
-                    DB::connection('sqlsrv')->table($tableName)->orderBy($firstColumn)->chunk(1000, function ($rows) use ($tableName, &$totalMigrated) {
-                        foreach ($rows as $row) {
-                            DB::connection('mysql')->table($tableName)->insert((array) $row);
-                            $totalMigrated++;
-                        }
-                        dump("Chunk of data for table {$tableName} migrated successfully.");
-                    });
+                $chunkSize = 10000;
+
+                $minId = DB::connection('sqlsrv')->table($tableName)->min('id'); 
+                $maxId = DB::connection('sqlsrv')->table($tableName)->max('id'); 
+
+                for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
+                    $endId = $startId + $chunkSize - 1;
+                    MigrateTableJobWithOffsetLimit::dispatch($tableName, $startId, $endId, $chunkSize);
                 }
 
-                if (Schema::connection('mysql')->hasColumn($tableName, 'id') && config('database.id_auto_increment')) {
-                    $maxId = DB::connection('mysql')->table($tableName)->max('id');
-                    $maxId = intval($maxId);
-                    DB::statement("ALTER TABLE {$tableName} AUTO_INCREMENT = " . ($maxId + 1));
-                    
-                    $primaryKey = DB::select(DB::raw("SHOW KEYS FROM {$tableName} WHERE Key_name = 'PRIMARY' AND Column_name = 'id'"));
-                    if (empty($primaryKey) && config('database.primary_key') === 'id'){
-                        DB::statement("ALTER TABLE {$tableName} ADD PRIMARY KEY (id)");
-                    }
-                }
-
-                DB::connection('mysql')->table('migration_status')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'records_migrated' => $totalMigrated,
-                        'migration_success' => true,
-                        'updated_at' => now(),
-                    ]
-                );
-
-                dump("Data of table {$tableName} migrated successfully.");
                 $successfulMigrations[] = $tableName;
+
             } catch (\Exception $e) {
                 dump("Error migrating table {$tableName}. ");
 
@@ -170,7 +146,6 @@ class MigrateTableHandler
                             
                 \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
                 continue;
-               
             }
         }
 
