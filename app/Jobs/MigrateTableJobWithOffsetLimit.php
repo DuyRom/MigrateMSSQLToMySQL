@@ -57,28 +57,24 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
                 }
             }
 
-            $rows = collect(); 
-
             if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
-                $rows = DB::connection('sqlsrv')
+                DB::connection('sqlsrv')
                     ->table($tableName)
-                    ->limit($chunkSize)
-                    ->get();
+                    ->chunk($chunkSize, function ($rows) use ($tableName) {
+                        foreach ($rows as $row) {
+                            DB::connection('mysql')->table($tableName)->insert((array) $row);
+                        }
+                    });
             } else {
-                $rows = DB::connection('sqlsrv')
+                DB::connection('sqlsrv')
                     ->table($tableName)
                     ->whereBetween('id', [$startId, $endId])
                     ->orderBy('id')
-                    ->limit($chunkSize)
-                    ->get();
-            }
-
-            if ($rows->isEmpty()) {
-                return;
-            }
-
-            foreach ($rows as $row) {
-                DB::connection('mysql')->table($tableName)->insert((array) $row);
+                    ->chunk($chunkSize, function ($rows) use ($tableName) {
+                        foreach ($rows as $row) {
+                            DB::connection('mysql')->table($tableName)->insert((array) $row);
+                        }
+                    });
             }
 
             dump("Data chunk for table {$tableName} from ID {$startId} to {$endId} migrated successfully.");
