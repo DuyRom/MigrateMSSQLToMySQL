@@ -4,8 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Schema;
-use App\Mail\MigrationCompleted;
-use Illuminate\Support\Facades\Mail;
 use App\Notifications\MigrationErrorNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Jobs\MigrateTableJobWithOffsetLimit;
@@ -15,9 +13,6 @@ class MigrateTableWithOffsetLimit
     public static function migrateTables($toLower = false)
     {
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
-
-        $successfulMigrations = [];
-        $failedMigrations = [];
 
         foreach ($tables as $table) {
             $tableName = $table->TABLE_NAME;
@@ -96,7 +91,7 @@ class MigrateTableWithOffsetLimit
                     continue;
                 }
 
-                $chunkSize = 10000;
+                $chunkSize = config('const.migrate.chunk_size');
 
                 $idColumnExists = Schema::connection('sqlsrv')->hasColumn($tableName, 'id');
                 $idColumnType = null;
@@ -122,28 +117,33 @@ class MigrateTableWithOffsetLimit
                     }
                 }
 
-                $successfulMigrations[] = $tableName;
-
-            } catch (\Exception $e) {
-                dump("Error migrating table {$tableName}. ");
-
-                DB::connection('mysql')->table('migration_errors')->insert([
-                    'table_name' => $tableName,
-                    'error_message' => $e->getMessage(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
                 DB::connection('mysql')->table('migration_status')->updateOrInsert(
                     ['table_name' => $tableName],
                     [
-                        'records_migrated' => $totalMigrated ?? 0,
-                        'migration_success' => false,
+                        'migration_success' => true,
                         'updated_at' => now(),
                     ]
                 );
 
-                $failedMigrations[] = $tableName;
+            } catch (\Exception $e) {
+                dump("Error migrating table {$tableName}. ");
+
+                DB::connection('mysql')->table('migration_errors')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'error_message' => $e->getMessage(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+
+                DB::connection('mysql')->table('migration_status')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'migration_success' => false,
+                        'updated_at' => now(),
+                    ]
+                );
 
                 Notification::route('mail', config('mail.to.address'))
                             ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
@@ -152,7 +152,5 @@ class MigrateTableWithOffsetLimit
                 continue;
             }
         }
-
-        Mail::to(config('mail.to.address'))->send(new MigrationCompleted($successfulMigrations, $failedMigrations));
     }
 }

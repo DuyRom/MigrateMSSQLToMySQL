@@ -2,6 +2,6 @@
 
 return [
     'migrate' => [
-        'chunk_size' => 10000,
+        'chunk_size' => env('MIGRATE_CHUNK_SIZE', 1000),
     ]
 ];

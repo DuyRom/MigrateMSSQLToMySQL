@@ -19,6 +19,8 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
     protected $endId;
     protected $chunkSize;
 
+    protected $jobId;
+
     /**
      * Create a new job instance.
      *
@@ -30,6 +32,14 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
         $this->startId = $startId;
         $this->endId = $endId;
         $this->chunkSize = $chunkSize;
+        $this->jobId = uniqid();
+
+        DB::connection('mysql')->table('job_statuses')->insert([
+            'job_id' => $this->jobId,
+            'table_name' => $this->tableName,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**
@@ -83,5 +93,12 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
             dump("Error migrating chunk for table {$tableName} from ID {$startId} to {$endId}. ");
             \Log::error("Error migrating chunk for table {$tableName} from ID {$startId} to {$endId}: " . $e->getMessage());
         }
+
+        DB::connection('mysql')->table('job_statuses')
+            ->where('job_id', $this->jobId)
+            ->update([
+                'completed' => true,
+                'updated_at' => now(),
+            ]);
     }
 }
