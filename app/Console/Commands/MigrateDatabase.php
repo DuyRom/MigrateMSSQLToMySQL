@@ -9,6 +9,7 @@ use App\Services\MigrateProcedureHandler;
 use App\Services\AddTableConstraintHandler;
 use App\Services\MigrateTableWithOffsetLimit;
 use App\Services\MigratePrimaryKeyAndIndexHandler;
+use App\Services\AddForeignKeyHandler;
 
 class MigrateDatabase extends Command
 {
@@ -39,9 +40,9 @@ class MigrateDatabase extends Command
 
     public function handle()
     {
-        MigrateTableWithOffsetLimit::migrateTables();
+        //MigrateTableWithOffsetLimit::migrateTables();
         //MigratePrimaryKeyAndIndexHandler::addPrimaryKeyAndIndex();
-        // AddTableConstraintHandler::addTableConstraints();
+        AddForeignKeyHandler::addForeignKey();
         // MigrateViewHandler::migrateViews();
         // MigrateProcedureHandler::create();
         $this->info('Database migration completed successfully.');
