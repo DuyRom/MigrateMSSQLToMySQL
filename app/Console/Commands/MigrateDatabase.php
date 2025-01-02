@@ -10,6 +10,7 @@ use App\Services\AddTableConstraintHandler;
 use App\Services\MigrateTableWithOffsetLimit;
 use App\Services\MigratePrimaryKeyAndIndexHandler;
 use App\Services\AddForeignKeyHandler;
+use App\Services\AutoIncrementPk;
 
 class MigrateDatabase extends Command
 {
@@ -41,8 +42,9 @@ class MigrateDatabase extends Command
     public function handle()
     {
         //MigrateTableWithOffsetLimit::migrateTables();
-        //MigratePrimaryKeyAndIndexHandler::addPrimaryKeyAndIndex();
+        // MigratePrimaryKeyAndIndexHandler::addPrimaryKeyAndIndex();
         AddForeignKeyHandler::addForeignKey();
+        // AutoIncrementPk::migrateTables();
         // MigrateViewHandler::migrateViews();
         // MigrateProcedureHandler::create();
         $this->info('Database migration completed successfully.');

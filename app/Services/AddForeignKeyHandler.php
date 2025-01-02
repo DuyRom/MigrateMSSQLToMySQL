@@ -20,6 +20,7 @@ class AddForeignKeyHandler
         }, $mysqlTables);
 
         $existingTables = array_intersect($mssqlTableNames, $mysqlTableNames);
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
         foreach ($existingTables as $tableName) {
             try {
@@ -52,16 +53,18 @@ class AddForeignKeyHandler
                     if ($fkColumnType !== $referencedColumnType) {
                         throw new \Exception("Data type mismatch between {$fk->FK_COLUMN_NAME} and {$fk->REFERENCED_COLUMN_NAME}");
                     }
-
+ 
                     Schema::connection('mysql')->table($tableName, function ($table) use ($fk) {
                         $table->foreign($fk->FK_COLUMN_NAME, $fk->FK_CONSTRAINT_NAME)
                               ->references($fk->REFERENCED_COLUMN_NAME)
                               ->on($fk->REFERENCED_TABLE_NAME)
-                              ->onDelete('cascade'); 
+                              ->onDelete('cascade');
                     });
+                    
+
+                    dump("Foreign key {$fk->FK_CONSTRAINT_NAME} added to table {$tableName}.");
                 }
 
-                dump("Constraints added successfully to table {$tableName}.");
             } catch (\Exception $e) {
                 dump("Error adding constraints to table {$tableName}: {$e->getMessage()}");
 
@@ -76,6 +79,7 @@ class AddForeignKeyHandler
             }
         }
 
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
         dump("Table constraints added successfully.");
     }
 }
