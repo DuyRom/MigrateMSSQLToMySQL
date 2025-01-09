@@ -4,9 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\MigrateViewHandler;
-use App\Services\MigrateTableHandler;
-use App\Services\MigrateProcedureHandler;
-use App\Services\AddTableConstraintHandler;
 use App\Services\MigrateTableWithOffsetLimit;
 use App\Services\MigratePrimaryKeyAndIndexHandler;
 use App\Services\AddForeignKeyHandler;
@@ -14,43 +11,47 @@ use App\Services\AutoIncrementPk;
 
 class MigrateDatabase extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'migrate:databases';
+    protected $signature = 'migrate:databases {task}';
+    protected $description = 'Migrate specific part of the database from MSSQL to MySQL';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Migrate entire database from MSSQL to MySQL';
-
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
-
-     public function __construct()
-     {
-         parent::__construct();
-     }
+    public function __construct()
+    {
+        parent::__construct();
+    }
 
     public function handle()
     {
-        //MigrateTableWithOffsetLimit::migrateTables();
-        // MigratePrimaryKeyAndIndexHandler::addPrimaryKeyAndIndex();
-        AddForeignKeyHandler::addForeignKey();
-        // AutoIncrementPk::migrateTables();
-        // MigrateViewHandler::migrateViews();
-        // MigrateProcedureHandler::create();
-        $this->info('Database migration completed successfully.');
+        $task = $this->argument('task');
+
+        switch ($task) {
+            case 'tables':
+                MigrateTableWithOffsetLimit::migrateTables();
+                $this->info('Tables migrated successfully.');
+                break;
+
+            case 'primary-key-index':
+                MigratePrimaryKeyAndIndexHandler::addPrimaryKeyAndIndex();
+                $this->info('Primary keys and indexes migrated successfully.');
+                break;
+
+            case 'foreign-keys':
+                AddForeignKeyHandler::addForeignKey();
+                $this->info('Foreign keys added successfully.');
+                break;
+
+            case 'auto-increment-pk':
+                AutoIncrementPk::migrateTables();
+                $this->info('Auto increment primary keys migrated successfully.');
+                break;
+
+            case 'views':
+                MigrateViewHandler::migrateViews();
+                $this->info('Views migrated successfully.');
+                break;
+
+            default:
+                $this->error('Invalid task specified.');
+                break;
+        }
     }
-
-    
-
-   
 }

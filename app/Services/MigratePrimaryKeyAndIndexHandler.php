@@ -64,7 +64,6 @@ class MigratePrimaryKeyAndIndexHandler
                 }
 
                 // Lấy thông tin chỉ mục từ MSSQL
-                $tableName = "DVBanLe";
                 $indexes = DB::connection('sqlsrv')->select("
                     SELECT 
                         i.name AS index_name,
