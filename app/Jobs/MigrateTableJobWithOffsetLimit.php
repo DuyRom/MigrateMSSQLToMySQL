@@ -18,14 +18,8 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
     protected $startId;
     protected $endId;
     protected $chunkSize;
-
     protected $jobId;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
     public function __construct($tableName, $startId, $endId, $chunkSize)
     {
         $this->tableName = $tableName;
@@ -42,11 +36,6 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
         ]);
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle()
     {
         $tableName = $this->tableName;
@@ -68,13 +57,24 @@ class MigrateTableJobWithOffsetLimit implements ShouldQueue
             }
 
             if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
-                DB::connection('sqlsrv')
-                    ->table($tableName)
-                    ->chunk($chunkSize, function ($rows) use ($tableName) {
-                        foreach ($rows as $row) {
-                            DB::connection('mysql')->table($tableName)->insert((array) $row);
-                        }
-                    });
+                $columns = Schema::connection('sqlsrv')->getColumnListing($tableName);
+                $firstColumn = $columns[0] ?? null;
+                $secondColumn = $columns[1] ?? null;
+
+                $query = DB::connection('sqlsrv')->table($tableName);
+
+                if ($firstColumn) {
+                    $query->orderBy($firstColumn);
+                }
+                if ($secondColumn) {
+                    $query->orderBy($secondColumn);
+                }
+
+                $query->chunk($chunkSize, function ($rows) use ($tableName) {
+                    foreach ($rows as $row) {
+                        DB::connection('mysql')->table($tableName)->insert((array) $row);
+                    }
+                });
             } else {
                 DB::connection('sqlsrv')
                     ->table($tableName)
