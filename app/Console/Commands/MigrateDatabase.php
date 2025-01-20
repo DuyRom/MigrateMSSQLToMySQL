@@ -49,6 +49,10 @@ class MigrateDatabase extends Command
                 $this->info('Views migrated successfully.');
                 break;
 
+            case 'sys-variables':
+                $this->call(command: 'migrate:SysVariables');
+                break;
+
             default:
                 $this->error('Invalid task specified.');
                 break;
