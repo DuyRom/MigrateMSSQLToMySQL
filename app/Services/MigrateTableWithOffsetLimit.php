@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Schema;
+use Illuminate\Support\Facades\Schema;
 use App\Notifications\MigrationErrorNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Jobs\MigrateTableJobWithOffsetLimit;
 
 class MigrateTableWithOffsetLimit
 {
-    public static function migrateTables($toLower = false)
+    /**
+     * Migrate only the schema (tables and columns) from MSSQL to MySQL.
+     */
+    public static function migrateSchema($toLower = false)
     {
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
 
@@ -22,7 +25,12 @@ class MigrateTableWithOffsetLimit
             }
 
             try {
-                $columns = DB::connection('sqlsrv')->select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$tableName]);
+                $columns = DB::connection('sqlsrv')->select(
+                    "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH 
+                     FROM INFORMATION_SCHEMA.COLUMNS 
+                     WHERE TABLE_NAME = ?", 
+                    [$tableName]
+                );
 
                 if (!Schema::connection('mysql')->hasTable($tableName)) {
                     Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
@@ -40,7 +48,7 @@ class MigrateTableWithOffsetLimit
                                 case 'nvarchar':
                                     if ($maxLength > 255) {
                                         $table->text($columnName)->nullable($isNullable);
-                                    } elseif ($maxLength == -1) { 
+                                    } elseif ($maxLength == -1) {
                                         $table->longText($columnName)->nullable($isNullable);
                                     } else {
                                         $table->string($columnName, $maxLength)->nullable($isNullable);
@@ -85,6 +93,63 @@ class MigrateTableWithOffsetLimit
                     dump("Table {$tableName} already exists in MySQL.");
                 }
 
+                DB::connection('mysql')->table('migration_status')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'migration_success' => true,
+                        'updated_at' => now(),
+                    ]
+                );
+
+            } catch (\Exception $e) {
+                dump("Error migrating schema for table {$tableName}. ");
+
+                DB::connection('mysql')->table('migration_errors')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'error_message' => $e->getMessage(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+
+                DB::connection('mysql')->table('migration_status')->updateOrInsert(
+                    ['table_name' => $tableName],
+                    [
+                        'migration_success' => false,
+                        'updated_at' => now(),
+                    ]
+                );
+
+                Notification::route('mail', config('mail.to.address'))
+                    ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
+
+                \Log::error("Error migrating schema for table {$tableName}: " . $e->getMessage());
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Migrate only the data from MSSQL to MySQL using queue.
+     */
+    public static function migrateData($toLower = false)
+    {
+        $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+
+        foreach ($tables as $table) {
+            $tableName = $table->TABLE_NAME;
+
+            if ($toLower) {
+                $tableName = strtolower($tableName);
+            }
+
+            try {
+                if (!Schema::connection('mysql')->hasTable($tableName)) {
+                    dump("Table {$tableName} does not exist in MySQL. Skipping data migration.");
+                    continue;
+                }
+
                 $mysqlDataCount = DB::connection('mysql')->table($tableName)->count();
                 if ($mysqlDataCount > 0) {
                     dump("Table {$tableName} already has data in MySQL. Skipping data migration.");
@@ -108,8 +173,8 @@ class MigrateTableWithOffsetLimit
                 if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
                     MigrateTableJobWithOffsetLimit::dispatch($tableName, null, null, $chunkSize);
                 } else {
-                    $minId = DB::connection('sqlsrv')->table($tableName)->min('id'); 
-                    $maxId = DB::connection('sqlsrv')->table($tableName)->max('id'); 
+                    $minId = DB::connection('sqlsrv')->table($tableName)->min('id');
+                    $maxId = DB::connection('sqlsrv')->table($tableName)->max('id');
 
                     for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
                         $endId = $startId + $chunkSize - 1;
@@ -126,7 +191,7 @@ class MigrateTableWithOffsetLimit
                 );
 
             } catch (\Exception $e) {
-                dump("Error migrating table {$tableName}. ");
+                dump("Error migrating data for table {$tableName}. ");
 
                 DB::connection('mysql')->table('migration_errors')->updateOrInsert(
                     ['table_name' => $tableName],
@@ -146,9 +211,9 @@ class MigrateTableWithOffsetLimit
                 );
 
                 Notification::route('mail', config('mail.to.address'))
-                            ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
-                            
-                \Log::error("Error migrating table {$tableName}: " . $e->getMessage());
+                    ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
+
+                \Log::error("Error migrating data for table {$tableName}: " . $e->getMessage());
                 continue;
             }
         }

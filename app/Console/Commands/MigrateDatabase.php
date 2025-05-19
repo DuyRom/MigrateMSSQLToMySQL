@@ -24,9 +24,9 @@ class MigrateDatabase extends Command
         $task = $this->argument('task');
 
         switch ($task) {
-            case 'tables':
-                MigrateTableWithOffsetLimit::migrateTables();
-                $this->info('Tables migrated successfully.');
+            case 'schema':
+                MigrateTableWithOffsetLimit::migrateSchema();
+                $this->info('Database schema migrated successfully.');
                 break;
 
             case 'primary-key-index':
@@ -42,6 +42,11 @@ class MigrateDatabase extends Command
             case 'auto-increment-pk':
                 AutoIncrementPk::migrateTables();
                 $this->info('Auto increment primary keys migrated successfully.');
+                break;
+
+             case 'data':
+                MigrateTableWithOffsetLimit::migrateData();
+                $this->info('Database data migrated successfully.');
                 break;
 
             case 'views':
