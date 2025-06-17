@@ -13,11 +13,13 @@ class MigrationErrorNotification extends Notification
 
     protected $tableName;
     protected $errorMessage;
+    protected $migrationType;
 
-    public function __construct($tableName, $errorMessage)
+    public function __construct($tableName, $errorMessage, $migrationType)
     {
         $this->tableName = $tableName;
         $this->errorMessage = $errorMessage;
+        $this->migrationType = $migrationType;
     }
 
     public function via($notifiable)
@@ -28,10 +30,10 @@ class MigrationErrorNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject('Migration Error Notification')
-                    ->line("An error occurred while migrating the table: {$this->tableName}")
-                    ->line("Error Message: {$this->errorMessage}")
-                    ->line('Please check the logs for more details.');
+            ->subject("Migration Error Notification - {$this->migrationType}")
+            ->line("An error occurred while migrating {$this->migrationType} for table: {$this->tableName}")
+            ->line("Error Message: {$this->errorMessage}")
+            ->line('Please check the logs for more details.');
     }
 
     public function toArray($notifiable)
@@ -39,6 +41,7 @@ class MigrationErrorNotification extends Notification
         return [
             'table_name' => $this->tableName,
             'error_message' => $this->errorMessage,
+            'migration_type' => $this->migrationType,
         ];
     }
 }

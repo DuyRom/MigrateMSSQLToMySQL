@@ -7,174 +7,150 @@ use Illuminate\Support\Facades\Schema;
 use App\Notifications\MigrationErrorNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Jobs\MigrateTableJobWithOffsetLimit;
+use Illuminate\Support\Facades\Log;
 
 class MigrateTableWithOffsetLimit
 {
     /**
-     * Migrate only the schema (tables and columns) from MSSQL to MySQL.
+     * Migrate schema from MSSQL to MySQL.
      */
     public static function migrateSchema($toLower = false)
     {
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
 
         foreach ($tables as $table) {
-            $tableName = $table->TABLE_NAME;
-
-            if ($toLower) {
-                $tableName = strtolower($tableName);
-            }
+            $tableName = $toLower ? strtolower($table->TABLE_NAME) : $table->TABLE_NAME;
 
             try {
-                $columns = DB::connection('sqlsrv')->select(
-                    "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH 
-                     FROM INFORMATION_SCHEMA.COLUMNS 
-                     WHERE TABLE_NAME = ?", 
-                    [$tableName]
-                );
-
-                if (!Schema::connection('mysql')->hasTable($tableName)) {
-                    Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
-                        foreach ($columns as $column) {
-                            $columnName = $column->COLUMN_NAME;
-                            $dataType = $column->DATA_TYPE;
-                            $isNullable = $column->IS_NULLABLE === 'YES';
-                            $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
-
-                            switch ($dataType) {
-                                case 'int':
-                                    $table->bigInteger($columnName)->nullable($isNullable);
-                                    break;
-                                case 'varchar':
-                                case 'nvarchar':
-                                    if ($maxLength > 255) {
-                                        $table->text($columnName)->nullable($isNullable);
-                                    } elseif ($maxLength == -1) {
-                                        $table->longText($columnName)->nullable($isNullable);
-                                    } else {
-                                        $table->string($columnName, $maxLength)->nullable($isNullable);
-                                    }
-                                    break;
-                                case 'text':
-                                    $table->text($columnName)->nullable($isNullable);
-                                    break;
-                                case 'ntext':
-                                    $table->longText($columnName)->nullable($isNullable);
-                                    break;
-                                case 'float':
-                                    $table->decimal($columnName, 18, 4)->nullable($isNullable);
-                                    break;
-                                case 'decimal':
-                                    $table->decimal($columnName, 18, 4)->nullable($isNullable);
-                                    break;
-                                case 'double':
-                                    $table->decimal($columnName, 18, 4)->nullable($isNullable);
-                                    break;
-                                case 'date':
-                                    $table->date($columnName)->nullable($isNullable);
-                                    break;
-                                case 'datetime':
-                                    $table->dateTime($columnName)->nullable($isNullable);
-                                    break;
-                                case 'bit':
-                                    $table->boolean($columnName)->nullable($isNullable);
-                                    break;
-                                case 'image':
-                                    $table->binary($columnName)->nullable($isNullable);
-                                    break;
-                                default:
-                                    $table->string($columnName)->nullable($isNullable);
-                                    break;
-                            }
-                        }
-                    });
-
-                    dump("Table {$tableName} created successfully in MySQL.");
-                } else {
-                    dump("Table {$tableName} already exists in MySQL.");
+                // Kiểm tra schema đã tồn tại
+                if (Schema::connection('mysql')->hasTable($tableName)) {
+                    Log::info("Table {$tableName} already exists in MySQL. Skipping schema migration.");
+                    continue;
                 }
 
-                DB::connection('mysql')->table('migration_status')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'migration_success' => true,
-                        'updated_at' => now(),
-                    ]
+                $columns = DB::connection('sqlsrv')->select(
+                    "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+                     FROM INFORMATION_SCHEMA.COLUMNS 
+                     WHERE TABLE_NAME = ?", 
+                    [$table->TABLE_NAME]
                 );
+
+                Schema::connection('mysql')->create($tableName, function ($table) use ($columns) "{
+                    foreach ($columns as $column) {
+                        $columnName = $column->COLUMN_NAME;
+                        $dataType = strtolower($column->DATA_TYPE);
+                        $isNullable = $column->IS_NULLABLE === 'YES';
+                        $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
+                        $numericPrecision = $column->NUMERIC_PRECISION;
+                        $numericScale = $column->NUMERIC_SCALE;
+
+                        switch ($dataType) {
+                            case 'int':
+                            case 'bigint':
+                                $table->bigInteger($columnName)->nullable($isNullable);
+                                break;
+                            case 'varchar':
+                            case 'nvarchar':
+                                if ($maxLength == -1) {
+                                    $table->longText($columnName)->nullable($isNullable);
+                                } elseif ($maxLength > 255) {
+                                    $table->text($columnName)->nullable($isNullable);
+                                } else {
+                                    $table->string($columnName, $maxLength ?: 255)->nullable($isNullable);
+                                }
+                                break;
+                            case 'text':
+                            case 'ntext':
+                                $table->longText($columnName)->nullable($isNullable);
+                                break;
+                            case 'decimal':
+                            case 'numeric':
+                                $table->decimal($columnName, $numericPrecision ?: 18, $numericScale ?: 4)->nullable($isNullable);
+                                break;
+                            case 'float':
+                            case 'double':
+                                $table->double($columnName)->nullable($isNullable);
+                                break;
+                            case 'date':
+                                $table->date($columnName)->nullable($isNullable);
+                                break;
+                            case 'datetime':
+                            case 'datetime2':
+                                $table->dateTime($columnName)->nullable($isNullable);
+                                break;
+                            case 'bit':
+                                $table->boolean($columnName)->nullable($isNullable);
+                                break;
+                            case 'image':
+                            case 'varbinary':
+                                $table->binary($columnName)->nullable($isNullable);
+                                break;
+                            default:
+                                Log::warning("Unsupported data type {$dataType} for column {$columnName} in table {$tableName}. Defaulting to string.");
+                                $table->string($columnName)->nullable($isNullable);
+                                break;
+                        }
+                    }
+                });
+
+                Log::info("Table {$tableName} schema created successfully in MySQL.");
+                self::updateMigrationStatus($tableName, true);
 
             } catch (\Exception $e) {
-                dump("Error migrating schema for table {$tableName}. ");
-
-                DB::connection('mysql')->table('migration_errors')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'error_message' => $e->getMessage(),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
-
-                DB::connection('mysql')->table('migration_status')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'migration_success' => false,
-                        'updated_at' => now(),
-                    ]
-                );
-
-                Notification::route('mail', config('mail.to.address'))
-                    ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
-
-                \Log::error("Error migrating schema for table {$tableName}: " . $e->getMessage());
-                continue;
+                self::handleMigrationError($tableName, $e, 'schema');
             }
         }
     }
 
     /**
-     * Migrate only the data from MSSQL to MySQL using queue.
+     * Migrate data from MSSQL to MySQL using queue.
      */
     public static function migrateData($toLower = false)
     {
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
 
         foreach ($tables as $table) {
-            $tableName = $table->TABLE_NAME;
-
-            if ($toLower) {
-                $tableName = strtolower($tableName);
-            }
+            $tableName = $toLower ? strtolower($table->TABLE_NAME) : $table->TABLE_NAME;
 
             try {
+                // Kiểm tra bảng tồn tại trong MySQL
                 if (!Schema::connection('mysql')->hasTable($tableName)) {
-                    dump("Table {$tableName} does not exist in MySQL. Skipping data migration.");
+                    Log::warning("Table {$tableName} does not exist in MySQL. Skipping data migration.");
                     continue;
                 }
 
+                // Kiểm tra dữ liệu đã được migrate
                 $mysqlDataCount = DB::connection('mysql')->table($tableName)->count();
                 if ($mysqlDataCount > 0) {
-                    dump("Table {$tableName} already has data in MySQL. Skipping data migration.");
+                    Log::info("Table {$tableName} already has {$mysqlDataCount} records in MySQL. Skipping data migration.");
                     continue;
                 }
 
-                $chunkSize = config('const.migrate.chunk_size');
+                // Kiểm tra số lượng bản ghi trong MSSQL
+                $mssqlDataCount = DB::connection('sqlsrv')->table($table->TABLE_NAME)->count();
+                if ($mssqlDataCount == 0) {
+                    Log::info("Table {$tableName} has no data in MSSQL. Skipping data migration.");
+                    continue;
+                }
 
-                $idColumnExists = Schema::connection('sqlsrv')->hasColumn($tableName, 'id');
+                $chunkSize = config('const.migrate.chunk_size', 1000);
+                $idColumnExists = Schema::connection('sqlsrv')->hasColumn($table->TABLE_NAME, 'id');
                 $idColumnType = null;
 
                 if ($idColumnExists) {
                     $idColumnType = DB::connection('sqlsrv')
-                        ->select("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'", [$tableName]);
+                        ->select("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'", [$table->TABLE_NAME]);
 
-                    if (!empty($idColumnType)) {
-                        $idColumnType = $idColumnType[0]->DATA_TYPE;
-                    }
+                    $idColumnType = !empty($idColumnType) ? $idColumnType[0]->DATA_TYPE : null;
                 }
+
+                Log::info("Starting data migration for table {$tableName} with {$mssqlDataCount} records.");
 
                 if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
                     MigrateTableJobWithOffsetLimit::dispatch($tableName, null, null, $chunkSize);
                 } else {
-                    $minId = DB::connection('sqlsrv')->table($tableName)->min('id');
-                    $maxId = DB::connection('sqlsrv')->table($tableName)->max('id');
+                    $minId = DB::connection('sqlsrv')->table($table->TABLE_NAME)->min('id');
+                    $maxId = DB::connection('sqlsrv')->table($table->TABLE_NAME)->max('id');
 
                     for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
                         $endId = $startId + $chunkSize - 1;
@@ -182,40 +158,52 @@ class MigrateTableWithOffsetLimit
                     }
                 }
 
-                DB::connection('mysql')->table('migration_status')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'migration_success' => true,
-                        'updated_at' => now(),
-                    ]
-                );
+                self::updateMigrationStatus($tableName, true);
 
             } catch (\Exception $e) {
-                dump("Error migrating data for table {$tableName}. ");
-
-                DB::connection('mysql')->table('migration_errors')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'error_message' => $e->getMessage(),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
-
-                DB::connection('mysql')->table('migration_status')->updateOrInsert(
-                    ['table_name' => $tableName],
-                    [
-                        'migration_success' => false,
-                        'updated_at' => now(),
-                    ]
-                );
-
-                Notification::route('mail', config('mail.to.address'))
-                    ->notify(new MigrationErrorNotification($tableName, $e->getMessage()));
-
-                \Log::error("Error migrating data for table {$tableName}: " . $e->getMessage());
-                continue;
+                self::handleMigrationError($tableName, $e, 'data');
             }
         }
+    }
+
+    /**
+     * Update migration status in the database.
+     */
+    private static function updateMigrationStatus($tableName, $success)
+    {
+        DB::connection('mysql')->table('migration_status')->updateOrInsert(
+            ['table_name' => $tableName],
+            [
+                'migration_success' => $success,
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    /**
+     * Handle migration errors with detailed logging and notification.
+     */
+    private static function handleMigrationError($tableName, \Exception $e, $type)
+    {
+        $errorMessage = $e->getMessage();
+        $stackTrace = $e->getTraceAsString();
+
+        Log::error("Error migrating {$type} for table {$tableName}: {$errorMessage}\nStack Trace: {$stackTrace}");
+
+        DB::connection('mysql')->table('migration_errors')->updateOrInsert(
+            ['table_name' => $tableName],
+            [
+                'error_message' => $errorMessage,
+                'stack_trace' => $stackTrace,
+                'migration_type' => $type,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        self::updateMigrationStatus($tableName, false);
+
+        Notification::route('mail', config('mail.to.address'))
+            ->notify(new MigrationErrorNotification($tableName, $errorMessage, $type));
     }
 }
