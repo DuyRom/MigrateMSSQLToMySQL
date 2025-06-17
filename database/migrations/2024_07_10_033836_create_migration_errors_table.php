@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('table_name');
             $table->longText('error_message');
             $table->longText('view_definition')->default('')->nullable();
-            $table->string('stack_trace')->nullable();
+            $table->text('stack_trace')->nullable();
             $table->text('migration_type')->nullable();
             $table->timestamps();
         });
