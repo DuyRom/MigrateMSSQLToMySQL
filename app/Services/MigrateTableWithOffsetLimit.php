@@ -35,7 +35,7 @@ class MigrateTableWithOffsetLimit
                     [$table->TABLE_NAME]
                 );
 
-                Schema::connection('mysql')->create($tableName, function ($table) use ($columns) "{
+                Schema::connection('mysql')->create($tableName, function ($table) use ($columns) {
                     foreach ($columns as $column) {
                         $columnName = $column->COLUMN_NAME;
                         $dataType = strtolower($column->DATA_TYPE);
