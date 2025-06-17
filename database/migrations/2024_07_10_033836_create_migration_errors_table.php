@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('table_name');
             $table->longText('error_message');
             $table->longText('view_definition')->default('')->nullable();
+            $table->string('migration_type')->nullable();
             $table->timestamps();
         });
     }
