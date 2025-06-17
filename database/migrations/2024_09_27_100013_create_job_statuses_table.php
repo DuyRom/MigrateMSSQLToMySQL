@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('job_id');
             $table->string('table_name');
+            $table->text('stack_trace')->nullable();
             $table->boolean('completed')->default(false);
             $table->timestamps();
         });
