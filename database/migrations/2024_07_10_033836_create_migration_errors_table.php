@@ -19,7 +19,7 @@ return new class extends Migration
             $table->longText('error_message');
             $table->longText('view_definition')->default('')->nullable();
             $table->string('stack_trace')->nullable();
-            $table->text('migration_details')->nullable();
+            $table->text('migration_type')->nullable();
             $table->timestamps();
         });
     }
