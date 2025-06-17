@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('job_statuses', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('start_id ')->nullable();
-            $table->bigInteger('end_id')->nullable();
+            $table->integer('start_id ')->nullable();
+            $table->integer('end_id')->nullable();
             $table->string('job_id');
             $table->string('table_name');
             $table->text('stack_trace')->nullable();
