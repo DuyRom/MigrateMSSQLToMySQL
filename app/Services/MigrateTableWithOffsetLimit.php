@@ -66,12 +66,14 @@ class MigrateTableWithOffsetLimit
                                 break;
                             case 'decimal':
                             case 'numeric':
-                                $table->decimal($columnName, $numericPrecision ?: 18, $numericScale ?: 4)->nullable($isNullable);
-                                break;
                             case 'float':
                             case 'double':
-                                $table->double($columnName)->nullable($isNullable);
+                                $table->decimal($columnName, $numericPrecision ?: 18, $numericScale ?: 4)->nullable($isNullable);
                                 break;
+                            // case 'float':
+                            // case 'double':
+                            //     $table->double($columnName)->nullable($isNullable);
+                            //     break;
                             case 'date':
                                 $table->date($columnName)->nullable($isNullable);
                                 break;
