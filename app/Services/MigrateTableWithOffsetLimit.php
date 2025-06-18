@@ -110,60 +110,73 @@ class MigrateTableWithOffsetLimit
     {
         $tables = DB::connection('sqlsrv')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
 
-        foreach ($tables as $table) {
-            $tableName = $toLower ? strtolower($table->TABLE_NAME) : $table->TABLE_NAME;
+        try {
+            // Vô hiệu hóa kiểm tra khóa ngoại trước khi migrate
+            DB::connection('mysql')->statement('SET FOREIGN_KEY_CHECKS=0');
+            Log::info("Foreign key checks disabled for data migration.");
 
-            try {
-                // Kiểm tra bảng tồn tại trong MySQL
-                if (!Schema::connection('mysql')->hasTable($tableName)) {
-                    Log::warning("Table {$tableName} does not exist in MySQL. Skipping data migration.");
-                    continue;
-                }
+            foreach ($tables as $table) {
+                $tableName = $toLower ? strtolower($table->TABLE_NAME) : $table->TABLE_NAME;
 
-                // Kiểm tra dữ liệu đã được migrate
-                $mysqlDataCount = DB::connection('mysql')->table($tableName)->count();
-                if ($mysqlDataCount > 0) {
-                    Log::info("Table {$tableName} already has {$mysqlDataCount} records in MySQL. Skipping data migration.");
-                    continue;
-                }
-
-                // Kiểm tra số lượng bản ghi trong MSSQL
-                $mssqlDataCount = DB::connection('sqlsrv')->table($table->TABLE_NAME)->count();
-                if ($mssqlDataCount == 0) {
-                    Log::info("Table {$tableName} has no data in MSSQL. Skipping data migration.");
-                    continue;
-                }
-
-                $chunkSize = config('const.migrate.chunk_size', 1000);
-                $idColumnExists = Schema::connection('sqlsrv')->hasColumn($table->TABLE_NAME, 'id');
-                $idColumnType = null;
-
-                if ($idColumnExists) {
-                    $idColumnType = DB::connection('sqlsrv')
-                        ->select("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'", [$table->TABLE_NAME]);
-
-                    $idColumnType = !empty($idColumnType) ? $idColumnType[0]->DATA_TYPE : null;
-                }
-
-                Log::info("Starting data migration for table {$tableName} with {$mssqlDataCount} records.");
-
-                if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
-                    MigrateTableJobWithOffsetLimit::dispatch($tableName, null, null, $chunkSize);
-                } else {
-                    $minId = DB::connection('sqlsrv')->table($table->TABLE_NAME)->min('id');
-                    $maxId = DB::connection('sqlsrv')->table($table->TABLE_NAME)->max('id');
-
-                    for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
-                        $endId = $startId + $chunkSize - 1;
-                        MigrateTableJobWithOffsetLimit::dispatch($tableName, $startId, $endId, $chunkSize);
+                try {
+                    // Kiểm tra bảng tồn tại trong MySQL
+                    if (!Schema::connection('mysql')->hasTable($tableName)) {
+                        Log::warning("Table {$tableName} does not exist in MySQL. Skipping data migration.");
+                        continue;
                     }
+
+                    // Kiểm tra dữ liệu đã được migrate
+                    $mysqlDataCount = DB::connection('mysql')->table($tableName)->count();
+                    if ($mysqlDataCount > 0) {
+                        Log::info("Table {$tableName} already has {$mysqlDataCount} records in MySQL. Skipping data migration.");
+                        continue;
+                    }
+
+                    // Kiểm tra số lượng bản ghi trong MSSQL
+                    $mssqlDataCount = DB::connection('sqlsrv')->table($table->TABLE_NAME)->count();
+                    if ($mssqlDataCount == 0) {
+                        Log::info("Table {$tableName} has no data in MSSQL. Skipping data migration.");
+                        continue;
+                    }
+
+                    $chunkSize = config('const.migrate.chunk_size', 1000);
+                    $idColumnExists = Schema::connection('sqlsrv')->hasColumn($table->TABLE_NAME, 'id');
+                    $idColumnType = null;
+
+                    if ($idColumnExists) {
+                        $idColumnType = DB::connection('sqlsrv')
+                            ->select("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'", [$table->TABLE_NAME]);
+
+                        $idColumnType = !empty($idColumnType) ? $idColumnType[0]->DATA_TYPE : null;
+                    }
+
+                    Log::info("Starting data migration for table {$tableName} with {$mssqlDataCount} records.");
+
+                    if (!$idColumnExists || !in_array($idColumnType, ['int', 'bigint'])) {
+                        MigrateTableJobWithOffsetLimit::dispatch($tableName, null, null, $chunkSize);
+                    } else {
+                        $minId = DB::connection('sqlsrv')->table($table->TABLE_NAME)->min('id');
+                        $maxId = DB::connection('sqlsrv')->table($table->TABLE_NAME)->max('id');
+
+                        for ($startId = $minId; $startId <= $maxId; $startId += $chunkSize) {
+                            $endId = $startId + $chunkSize - 1;
+                            MigrateTableJobWithOffsetLimit::dispatch($tableName, $startId, $endId, $chunkSize);
+                        }
+                    }
+
+                    self::updateMigrationStatus($tableName, true);
+
+                } catch (\Exception $e) {
+                    self::handleMigrationError($tableName, $e, 'data');
                 }
-
-                self::updateMigrationStatus($tableName, true);
-
-            } catch (\Exception $e) {
-                self::handleMigrationError($tableName, $e, 'data');
             }
+
+        } catch (\Exception $e) {
+            Log::error("Error during data migration: {$e->getMessage()}\nStack Trace: {$e->getTraceAsString()}");
+        } finally {
+            // Kích hoạt lại kiểm tra khóa ngoại sau khi migrate
+            DB::connection('mysql')->statement('SET FOREIGN_KEY_CHECKS=1');
+            Log::info("Foreign key checks re-enabled after data migration.");
         }
     }
 

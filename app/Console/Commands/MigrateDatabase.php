@@ -28,10 +28,15 @@ class MigrateDatabase extends Command
                 MigrateTableWithOffsetLimit::migrateSchema();
                 $this->info('Database schema migrated successfully.');
                 break;
-
+        
             case 'primary-key-index':
                 MigratePrimaryKeyAndIndexHandler::addPrimaryKeyAndIndex();
                 $this->info('Primary keys and indexes migrated successfully.');
+                break;
+            
+            case 'data':
+                MigrateTableWithOffsetLimit::migrateData();
+                $this->info('Database data migrated successfully.');
                 break;
 
             case 'foreign-keys':
@@ -42,11 +47,6 @@ class MigrateDatabase extends Command
             case 'auto-increment-pk':
                 AutoIncrementPk::migrateTables();
                 $this->info('Auto increment primary keys migrated successfully.');
-                break;
-
-             case 'data':
-                MigrateTableWithOffsetLimit::migrateData();
-                $this->info('Database data migrated successfully.');
                 break;
 
             case 'views':
