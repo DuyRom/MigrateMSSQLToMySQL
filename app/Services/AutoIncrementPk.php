@@ -12,8 +12,11 @@ use Illuminate\Support\Facades\Log;
 
 class AutoIncrementPk
 {
+    // Định nghĩa tên cột mặc định
+    private const PRIMARY_KEY_COLUMN = 'ID';
+
     /**
-     * Migrate tables and set auto-increment for ID columns.
+     * Migrate tables and set auto-increment for primary key columns.
      */
     public static function migrateTables($toLower = false)
     {
@@ -40,17 +43,17 @@ class AutoIncrementPk
                 $isAutoIncrement = DB::connection('sqlsrv')->selectOne(
                     "SELECT COLUMNPROPERTY(object_id(TABLE_NAME), COLUMN_NAME, 'IsIdentity') as IsIdentity
                      FROM INFORMATION_SCHEMA.COLUMNS
-                     WHERE TABLE_NAME = ? AND COLUMN_NAME = 'id'",
-                    [$table->TABLE_NAME]
+                     WHERE TABLE_NAME = ? AND COLUMN_NAME = ?",
+                    [$table->TABLE_NAME, self::PRIMARY_KEY_COLUMN]
                 );
 
-                if ($isAutoIncrement && $isAutoIncrement->IsIdentity && Schema::connection('mysql')->hasColumn($tableName, 'id')) {
-                    $maxId = DB::connection('mysql')->table($tableName)->max('id') ?? 0;
+                if ($isAutoIncrement && $isAutoIncrement->IsIdentity && Schema::connection('mysql')->hasColumn($tableName, self::PRIMARY_KEY_COLUMN)) {
+                    $maxId = DB::connection('mysql')->table($tableName)->max(self::PRIMARY_KEY_COLUMN) ?? 0;
                     $maxId = intval($maxId);
                     Log::info("Max ID of table {$tableName} is {$maxId}");
 
                     // Thiết lập auto-increment trong MySQL
-                    DB::connection('mysql')->statement("ALTER TABLE {$tableName} MODIFY COLUMN id BIGINT AUTO_INCREMENT");
+                    DB::connection('mysql')->statement("ALTER TABLE {$tableName} MODIFY COLUMN `" . self::PRIMARY_KEY_COLUMN . "` BIGINT AUTO_INCREMENT");
                     DB::connection('mysql')->statement("ALTER TABLE {$tableName} AUTO_INCREMENT = " . ($maxId + 1));
 
                     $totalMigrated++;
